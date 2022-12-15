@@ -10,6 +10,16 @@ import (
 	"lee-netflow/internal/domain/rule/parser"
 )
 
+type SuricataConfig struct {
+	Addresses map[string]string `json:"addresses"`
+	Ports map[string]string `json:"ports"`
+}
+
+type Suricata struct {
+	parser suricata_parser.SuricataParser
+	matcher suricata_matcher.SuricataMatcher
+}
+
 func New() *Suricata {
 	return &Suricata{
 		parser: *suricata_parser.New(),
@@ -17,12 +27,14 @@ func New() *Suricata {
 	}
 }
 
-func (s *Suricata) GetParser() parser.IParser {
+func (s *Suricata) GetParser() parser.Parser {
 	return &s.parser
 }
-func (s *Suricata) GetMatcher() matcher.IMatcher {
+
+func (s *Suricata) GetMatcher() matcher.Matcher {
 	return &s.matcher
 }
+
 func (s *Suricata) Configure(config_path string) error {
 	conf_bytes, err := ioutil.ReadFile(config_path)
 	if err != nil {
@@ -57,10 +69,12 @@ func (s *Suricata) Configure(config_path string) error {
 	}
 
 	return nil
-} 
+}
+
 func (s *Suricata) GetInfo() string {
 	return "Suricata System Info"
 }
+
 func (s *Suricata) GetRuleFormat() string {
 	return "Action Protocol SrcAddress SrcPort Direction DstAddress DstPort Options"
 }
