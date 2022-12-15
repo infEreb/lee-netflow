@@ -71,5 +71,7 @@ func main() {
 		return
 	}
 
+	
+
 	fmt.Println(rule)
 }
