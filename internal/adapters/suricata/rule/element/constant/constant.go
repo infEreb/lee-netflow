@@ -35,7 +35,7 @@ type Constant struct {
 	const_type element.ElementType
 }
 
-// Creates new Address rule element of addr_type ConstantType
+// Creates new Constant rule element
 func New(value string, element element.Element) *Constant {
 	return &Constant{
 		value:	value,
@@ -45,7 +45,7 @@ func New(value string, element element.Element) *Constant {
 	}
 }
 
-// Returns new object of AddressType type
+// Returns new object of ConstantType type
 func GetConstantType() *ConstantType {
 	return &ConstantType{
 		name: "Constant",
@@ -81,7 +81,7 @@ func (c *Constant) Compare(b_c element.Element) bool {
 	if !ok {
 		return false
 	}
-	return c.value == s_c.value && c.element.GetType().Compare(s_c.element.GetType()) && c.element.GetValue() == s_c.element.GetValue()
+	return c.value == s_c.value // && c.element.GetType().Compare(s_c.element.GetType()) && c.element.GetValue() == s_c.element.GetValue()
 }
 // Sets negative value for address (that means we have '! char with this one)
 func (c *Constant) Negative() {
