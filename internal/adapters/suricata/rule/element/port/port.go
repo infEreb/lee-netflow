@@ -33,6 +33,13 @@ func (pt *PortType) SetName(port_type_name string) {
 	pt.name = port_type_name
 }
 
+func (pt *PortType) Compare(b_pt element.ElementType) bool {
+	s_pt, ok := b_pt.(*PortType)
+	if !ok {
+		return false
+	}
+	return pt.name == s_pt.GetName()
+}
 
 type SrcPortType struct {
 	PortType
@@ -43,11 +50,11 @@ type DstPortType struct {
 }
 
 type Port struct {
-	port_type element.IElementType
+	port_type element.ElementType
 	value     string
 }
 
-func New(value string, port_type element.IElementType) *Port {
+func New(value string, port_type element.ElementType) *Port {
 	return &Port{
 		port_type: port_type,
 		value: value,
@@ -136,11 +143,19 @@ func (p *Port) GetValue() string {
 func (p *Port) SetValue(value string) {
 	p.value = value
 }
-func (p *Port) GetType() element.IElementType {
+func (p *Port) GetType() element.ElementType {
 	return p.port_type
 }
-func (p *Port) SetType(port_type element.IElementType) {
+func (p *Port) SetType(port_type element.ElementType) {
 	p.port_type = port_type
+}
+
+func (p *Port) Compare(b_p element.Element) bool {
+	s_p, ok := b_p.(*Port)
+	if !ok {
+		return false
+	}
+	return p.value == s_p.value 
 }
 
 func IsConstant(port_const string) bool {

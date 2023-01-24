@@ -20,12 +20,20 @@ type DirectionType struct {
 	name string
 }
 
-func (at *DirectionType) GetName() string {
-	return at.name
+func (dt *DirectionType) GetName() string {
+	return dt.name
 }
 
-func (at *DirectionType) SetName(dir_type_name string) {
-	at.name = dir_type_name
+func (dt *DirectionType) SetName(dir_type_name string) {
+	dt.name = dir_type_name
+}
+
+func (dt *DirectionType) Compare(b_dt element.ElementType) bool {
+	s_dt, ok := b_dt.(*DirectionType)
+	if !ok {
+		return false
+	}
+	return dt.name == s_dt.GetName()
 }
 
 // Direction rule element
@@ -62,5 +70,13 @@ func (d *Direction) GetType() element.ElementType {
 
 func (d *Direction) SetType(dir_type element.ElementType) {
 	d.dir_type = dir_type
+}
+
+func (d *Direction) Compare(b_d element.Element) bool {
+	s_d, ok := b_d.(*Direction)
+	if !ok {
+		return false
+	}
+	return d.value == s_d.value 
 }
 

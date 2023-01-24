@@ -35,6 +35,14 @@ func (at *AddressType) SetName(addr_type_name string) {
 	at.name = addr_type_name
 }
 
+func (at *AddressType) Compare(b_at element.ElementType) bool {
+	s_at, ok := b_at.(*AddressType)
+	if !ok {
+		return false
+	}
+	return at.name == s_at.GetName()
+}
+
 // Type for source address AddressType of rule
 type SrcAddressType struct {
 	AddressType
@@ -47,15 +55,17 @@ type DstAddressType struct {
 
 // Address rule element
 type Address struct {
-	addr_type element.ElementType
-	value     string
+	value      string
+	isNegative bool
+	addr_type  element.ElementType
 }
 
 // Creates new Address rule element of addr_type AddressType
 func New(value string, addr_type element.ElementType) *Address {
 	return &Address{
-		addr_type: addr_type,
-		value: value,
+		value:      value,
+		isNegative: false,
+		addr_type:  addr_type,
 	}
 }
 
@@ -98,6 +108,22 @@ func (a *Address) GetType() element.ElementType {
 
 func (a *Address) SetType(addr_type element.ElementType) {
 	a.addr_type = addr_type
+}
+
+func (a *Address) Compare(b_a element.Element) bool {
+	s_a, ok := b_a.(*Address)
+	if !ok {
+		return false
+	}
+	return a.value == s_a.value
+}
+// Sets negative value for address (that means we have '! char with this one)
+func (a *Address) Negative() {
+	a.isNegative = true
+}
+
+func (a *Address) IsNegavite() bool {
+	return a.isNegative
 }
 
 func IsConstant(addr_const string) bool {
@@ -200,4 +226,3 @@ func CheckAvailableElem(addr_elem string) bool {
 	// cannot be other type
 	return true
 }
-
