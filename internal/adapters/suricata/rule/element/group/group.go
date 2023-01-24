@@ -1,4 +1,4 @@
-package Group
+package group
 
 import (
 	"lee-netflow/internal/domain/rule/element"
@@ -63,9 +63,11 @@ func (g *Group) SetValue(value string) {
 func (g *Group) GetElements() []element.Element {
 	return g.elements
 }
-
 func (g *Group) SetElements(elements []element.Element) {
 	g.elements = elements
+}
+func (g *Group) AddElement(element element.Element) {
+	g.elements = append(g.elements, element)
 }
 
 func (g *Group) GetType() element.ElementType {
