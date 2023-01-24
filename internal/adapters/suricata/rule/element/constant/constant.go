@@ -36,10 +36,10 @@ type Constant struct {
 }
 
 // Creates new Constant rule element
-func New(value string, element element.Element) *Constant {
+func New(value string, elem element.Element) *Constant {
 	return &Constant{
 		value:	value,
-		element: element,
+		element: elem,
 		isNegative: false,
 		const_type: GetConstantType(),
 	}
