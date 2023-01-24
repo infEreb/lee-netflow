@@ -29,23 +29,36 @@ var (
 	Constant element.ElementType = constant.GetConstantType()
 )
 
+const (
+	RE_Constant = `^!?\$[A-Z,_]+$`
+	RE_Group = `^!?\[.*?(,\s?.*?){1,}\]$`
+	RE_PortRange = `^!?\[(!?\d{1,5}|!?\d{1,5}:\s?!?\d{1,5})(,\s?((!?\d{1,5})|(!?\d{1,5}:\s?!?\d{1,5})))?\]$`
+	RE_Port = `^!?\d{1,5}$`
+	RE_IPv4 = `^!?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(/\d{1,2})?`
+)
+
 func IsConstant(const_str string) bool {
-	matched, _ := regexp.MatchString(`^!?\$[A-Z,_]+$`, const_str)
+	matched, _ := regexp.MatchString(RE_Constant, const_str)
 	return matched
 }
 
 func IsGroup(group_str string) bool {
-	matched, _ := regexp.MatchString(`^!?\[.*?(, .*?){1,}\]^`, group_str)
+	matched, _ := regexp.MatchString(RE_Group, group_str)
+	return matched && !IsPortRange(group_str)
+}
+
+func IsPortRange(range_str string) bool {
+	matched, _ := regexp.MatchString(RE_PortRange, range_str)
 	return matched
 }
 
-func IsRange(range_str string) bool {
-	matched, _ := regexp.MatchString(`^!?\[!?\d{1,5}:!?\d{1,5}\]$`, range_str)
+func IsPort(port_str string) bool {
+	matched, _ := regexp.MatchString(RE_Port, port_str)
 	return matched
 }
 
 func IsIPv4(ipv4_str string) bool {
-	matched, _ := regexp.MatchString(`^!?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(/\d{1,2})?`, ipv4_str)
+	matched, _ := regexp.MatchString(RE_IPv4, ipv4_str)
 	if !matched {
 		return false
 	}
