@@ -1,4 +1,6 @@
 *.test
 *.exe
 
+*.log
+
 .vscode
