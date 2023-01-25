@@ -16,17 +16,17 @@ import (
 
 // suricata types constants
 var (
-	Action element.ElementType = action.GetActionType()
-	Protocol element.ElementType = protocol.GetProtocolType()
-	SrcAddress element.ElementType = address.GetSrcAddressType()
-	SrcPort element.ElementType = port.GetSrcPortType()
-	Direction element.ElementType = direction.GetDirectionType()
-	DstAddress element.ElementType = address.GetDstAddressType()
-	DstPort element.ElementType = port.GetDstPortType()
-	Option element.ElementType = option.GetOptionType()
+	ActionType element.ElementType = action.GetActionType()
+	ProtocolType element.ElementType = protocol.GetProtocolType()
+	SrcAddressType element.ElementType = address.GetSrcAddressType()
+	SrcPortType element.ElementType = port.GetSrcPortType()
+	DirectionType element.ElementType = direction.GetDirectionType()
+	DstAddressType element.ElementType = address.GetDstAddressType()
+	DstPortType element.ElementType = port.GetDstPortType()
+	OptionType element.ElementType = option.GetOptionType()
 	
-	Address element.ElementType = address.GetAddressType()
-	Constant element.ElementType = constant.GetConstantType()
+	AddressType element.ElementType = address.GetAddressType()
+	ConstantType element.ElementType = constant.GetConstantType()
 )
 
 const (
