@@ -63,13 +63,13 @@ func (sp *SuricataParser) Parse(rule_text string) (s_rule *rule.Rule, err error)
 	proto, _ := ParseProtocol(elements[2])
 	s_rule.AddElement(proto)
 	// parse src address
-	src_addr, err := ParseAddress(elements[3], constants.SrcAddress.(*address.AddressType))
+	src_addr, err := ParseAddress(elements[3], constants.SrcAddressType.(*address.AddressType))
 	if err != nil {
 		return s_rule, err
 	}
 	s_rule.AddElement(src_addr)
 	// parse src port
-	src_port, err := ParsePort(elements[3], constants.SrcPort.(*port.PortType))
+	src_port, err := ParsePort(elements[3], constants.SrcPortType.(*port.PortType))
 	if err != nil {
 		return s_rule, err
 	}
@@ -78,13 +78,13 @@ func (sp *SuricataParser) Parse(rule_text string) (s_rule *rule.Rule, err error)
 	dir, err := ParseDirection(elements[5])
 	s_rule.AddElement(dir)
 	// parse dst address
-	dst_addr, err := ParseAddress(elements[6], constants.DstAddress.(*address.AddressType))
+	dst_addr, err := ParseAddress(elements[6], constants.DstAddressType.(*address.AddressType))
 	if err != nil {
 		return s_rule, err
 	}
 	s_rule.AddElement(dst_addr)
 	// parse src port
-	dst_port, err := ParsePort(elements[7], constants.DstPort.(*port.PortType))
+	dst_port, err := ParsePort(elements[7], constants.DstPortType.(*port.PortType))
 	if err != nil {
 		return s_rule, err
 	}
@@ -177,6 +177,46 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 		eof_elem := false
 
 		for _, ch := range elem_str {
+			
+			if ch == '[' && in_grp == 0 {
+				in_grp++
+				continue
+			}
+			if ch == '[' && in_grp > 0 {
+				in_grp++
+				elem += string(ch)
+				continue
+			}
+			// if we're inside more than 2nd or eq 2 group and char is ']'
+			if ch == ']' && in_grp >= 2 { // [[[11, 12], 21], 31]
+				in_grp--
+				elem += string(ch)
+				continue
+			}
+			// if we're inside 1st group and char is ']'
+			if ch == ']' && in_grp == 1 { 
+				in_grp--
+				eof_elem = true
+			}
+			// if we're inside 2nd group 
+			if in_grp > 1 {
+				elem += string(ch)
+				continue
+			}
+			if in_grp > 1 && ch == ' ' {
+				elem += string(ch)
+			}
+			if in_grp == 1 && ch == ',' {
+				eof_elem = true
+			}
+			if in_grp == 1 && ch == ' ' {
+				continue
+			}
+			if in_grp == 1 && !eof_elem{
+				elem += string(ch)
+				continue
+			}
+			
 			if eof_elem {
 				p_elem, err := ParseGroupElements(elem, elem_type)
 				if err != nil {
@@ -187,51 +227,12 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 				eof_elem = false
 				continue
 			}
-
-			if ch == '[' && in_grp == 0 {
-				in_grp++
-				continue
-			}
-			if ch == '[' && in_grp > 0 {
-				in_grp++
-				elem += string(ch)
-				continue
-			}
-			// if we're inside more than 2nd group and char is ']'
-			if ch == ']' && in_grp > 2 {
-				in_grp--
-				elem += string(ch)
-				continue
-			}
-			// if we're inside 2st group and char is ']'
-			if ch == ']' && in_grp == 2 { // [[[11, 12], 21], 31]
-				in_grp--
-				elem += string(ch)
-				continue
-			}
-			// if we're inside 2nd group 
-			if in_grp > 1 {
-				elem += string(ch)
-				continue
-			}
-			if in_grp == 1 && ch == ',' {
-				eof_elem = true
-				continue
-			}
-			if in_grp > 0 && ch == ' ' {
-				elem += string(ch)
-			}
-			if in_grp == 1 && ch == ',' {
-				eof_elem = true
-				continue
-			}
-
 			// elem += string(ch)
-
+			
 		}
 		return grp, nil
 	}
-
+	
 	return action.New("NULL"), fmt.Errorf("Has doesnt matched any element")
 }
 
