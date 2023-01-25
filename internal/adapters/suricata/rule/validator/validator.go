@@ -22,38 +22,39 @@ func New() (val *SuricataValidator) {
 		BaseValidator: *validator.New(),
 	}
 	// set valid elements for validator
-	val.SetValid(map[element.ElementType][]element.Element {
-		constants.Action: {
+	val.SetValid(map[string][]element.Element {
+		constants.ActionType.GetName(): {
 			action.New("alert"),
 			action.New("pass"),
 		},
-		constants.Protocol: {
+		constants.ProtocolType.GetName(): {
 			protocol.New("ip"),
 			protocol.New("tcp"),
 			protocol.New("http"),
 		},
-		constants.Constant: {
-			constant.New("any", address.New("any", constants.SrcAddress)),
-			constant.New("any", address.New("any", constants.DstAddress)),
-			constant.New("any", port.New("any", constants.SrcPort)),
-			constant.New("any", port.New("any", constants.DstPort)),
+		constants.ConstantType.GetName(): {
+			constant.New("any", protocol.New("any")),
+			constant.New("any", address.New("any", constants.SrcAddressType)),
+			constant.New("any", address.New("any", constants.DstAddressType)),
+			constant.New("any", port.New("any", constants.SrcPortType)),
+			constant.New("any", port.New("any", constants.DstPortType)),
 		},
-		constants.Direction: {
+		constants.DirectionType.GetName(): {
 			direction.New("->"),
 			direction.New("<-"),
 			direction.New("<>"),
 		},
-		constants.Option: {
-
+		constants.OptionType.GetName(): {
+			
 		},
 	})
 
 	return
 }
 
-func (sv *SuricataValidator) Validate(elements map[element.ElementType][]element.Element) error {
+func (sv *SuricataValidator) Validate(elements map[string][]element.Element) error {
 	for elem_type, elems := range elements {
-		if elem_type.Compare(constants.Option) {
+		if elem_type == (constants.OptionType.GetName()) {
 			// logic for options compare
 		}
 		// if we have not this element type in valid just skip validation
@@ -64,7 +65,7 @@ func (sv *SuricataValidator) Validate(elements map[element.ElementType][]element
 		for _, elem := range elems {
 			// if this element isnt valid element
 			if !sv.IsValid(elem) {
-				return fmt.Errorf("%s element %s isnt valid", elem_type.GetName(), elem.GetValue()) 
+				return fmt.Errorf("%s element %s isnt valid", elem_type, elem.GetValue()) 
 			}
 		}
 
