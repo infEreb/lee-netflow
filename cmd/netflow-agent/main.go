@@ -42,7 +42,7 @@ func conf_flags() error {
 }
 
 func main() {
-	var system system.ISystem = suricata.New()
+	var system system.RuleFormatSystem = suricata.New()
 
 	// flags
 	if err := conf_flags(); err != nil {
