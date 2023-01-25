@@ -7,6 +7,7 @@ import (
 
 // Rule defindes rule struct
 type Rule struct {
+	name string
 	// rule is disabled flag
 	// false by default
 	disabled bool
@@ -16,8 +17,9 @@ type Rule struct {
 
 // Creates new rule with empty elements
 // And enabled as default
-func New() *Rule {
+func New(name string) *Rule {
 	return &Rule{
+		name: name,
 		disabled: false,
 		elements: map[string][]element.Element{},
 	}
@@ -54,6 +56,13 @@ func (r *Rule) IsDisabled() bool {
 	return r.disabled
 }
 
+func (r *Rule) GetName() string {
+	return r.name
+}
+func (r *Rule) SetName(name string) {
+	r.name = name
+}
+
 func (r *Rule) String() (s string) {
 	s = "{"
 	for elem_type, elems := range r.elements {
@@ -61,7 +70,7 @@ func (r *Rule) String() (s string) {
 		s += "["
 		for i, elem := range elems {
 			s += fmt.Sprintf("\n\t\t\"%s\"", elem.GetValue())
-			if i < len(elems) - 1 {
+			if i < len(elems)-1 {
 				s += ","
 			}
 		}
