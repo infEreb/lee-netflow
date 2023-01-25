@@ -13,9 +13,9 @@ type System interface {
 	// Main logic of system work
 	Run() error
 	// Loggers
-	InfoLog() log.Logger
-	DebugLog() log.Logger
-	ErrorLog() log.Logger
+	InfoLog() *log.Logger
+	DebugLog() *log.Logger
+	ErrorLog() *log.Logger
 	// Returns info about system
 	GetInfo() string
 }
