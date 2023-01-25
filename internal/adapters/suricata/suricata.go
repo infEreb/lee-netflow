@@ -141,35 +141,21 @@ func (s *Suricata) Configure(config_path string) error {
 		}
 		// if its ipv4
 		if constants.IsIPv4(value) {
-			src_addr := constant.New(key, address.New(value, constants.SrcAddressType))
-			dst_addr := constant.New(key, address.New(value, constants.DstAddressType))
-			if err = s.validator.AddValid(src_addr); err != nil {
+			const_addr := constant.New(key, address.New(value, constants.AddressType))
+			if err = s.validator.AddValid(const_addr); err != nil {
 				return err
 			}
-			if err = s.validator.AddValid(dst_addr); err != nil {
-				return err
-			}
-			if err = s.validator.AddAvailable(src_addr); err != nil {
-				return err
-			}
-			if err = s.validator.AddAvailable(dst_addr); err != nil {
+			if err = s.validator.AddAvailable(const_addr); err != nil {
 				return err
 			}
 		}
 		// if constant is group
 		if constants.IsGroup(value) {
-			group, err := suricata_parser.ParseGroup(value, constants.SrcAddressType)
+			grp, err := suricata_parser.ParseGroup(value, constants.AddressType)
 			if err != nil {
 				return err
 			}
-			dst_group, err := suricata_parser.ParseGroup(value, constants.DstAddressType)
-			if err != nil {
-				return err
-			}
-			for _, el := range dst_group.GetElements() {
-				group.AddElement(el)
-			}
-			const_grp := constant.New(key, group)
+			const_grp := constant.New(key, grp)
 			if err = s.validator.AddValid(const_grp); err != nil {
 				return err
 			}
@@ -203,68 +189,39 @@ func (s *Suricata) Configure(config_path string) error {
 		}
 		// if its port
 		if constants.IsPort(value) {
-			src_port := constant.New(key, port.New(value, constants.SrcPortType))
-			dst_port := constant.New(key, port.New(value, constants.DstPortType))
-			if err = s.validator.AddValid(src_port); err != nil {
+			const_port := constant.New(key, port.New(value, constants.PortType))
+			if err = s.validator.AddValid(const_port); err != nil {
 				return err
 			}
-			if err = s.validator.AddValid(dst_port); err != nil {
-				return err
-			}
-			if err = s.validator.AddAvailable(src_port); err != nil {
-				return err
-			}
-			if err = s.validator.AddAvailable(dst_port); err != nil {
+			if err = s.validator.AddAvailable(const_port); err != nil {
 				return err
 			}
 		}
 		// if constant is range
 		if constants.IsPortRange(value) {
-			src_range, err := suricata_parser.ParseGroup(value, constants.SrcPortType)
+			p_range, err := suricata_parser.ParseGroup(value, constants.PortType)
 			if err != nil {
 				return err
 			}
-			dst_range, err := suricata_parser.ParseGroup(value, constants.DstPortType)
-			if err != nil {
-				return err
-			}
-			src_const_rng := constant.New(key, src_range)
-			dst_const_rng := constant.New(key, dst_range)
-			if err = s.validator.AddValid(src_const_rng); err != nil {
+			const_rng := constant.New(key, p_range)
+			if err = s.validator.AddValid(const_rng); err != nil {
 				return nil
 			}
-			if err = s.validator.AddValid(dst_const_rng); err != nil {
-				return nil
-			}
-			if err = s.validator.AddAvailable(src_const_rng); err != nil {
-				return nil
-			}
-			if err = s.validator.AddAvailable(dst_const_rng); err != nil {
+			if err = s.validator.AddAvailable(const_rng); err != nil {
 				return nil
 			}
 		}
 		// if constant is group
 		if constants.IsGroup(value) {
-			src_group, err := suricata_parser.ParseGroup(value, constants.SrcPortType)
+			group, err := suricata_parser.ParseGroup(value, constants.SrcPortType)
 			if err != nil {
 				return err
 			}
-			dst_group, err := suricata_parser.ParseGroup(value, constants.DstPortType)
-			if err != nil {
-				return err
-			}
-			src_const_grp := constant.New(key, src_group)
-			dst_const_grp := constant.New(key, dst_group)
-			if err = s.validator.AddValid(src_const_grp); err != nil {
+			const_grp := constant.New(key, group)
+			if err = s.validator.AddValid(const_grp); err != nil {
 				return nil
 			}
-			if err = s.validator.AddValid(dst_const_grp); err != nil {
-				return nil
-			}
-			if err = s.validator.AddAvailable(src_const_grp); err != nil {
-				return nil
-			}
-			if err = s.validator.AddAvailable(dst_const_grp); err != nil {
+			if err = s.validator.AddAvailable(const_grp); err != nil {
 				return nil
 			}
 		}
