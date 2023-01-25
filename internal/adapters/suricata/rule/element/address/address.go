@@ -40,6 +40,9 @@ func (at *AddressType) Compare(b_at element.ElementType) bool {
 	if !ok {
 		return false
 	}
+	if s_at.GetName() == GetAddressType().GetName() || at.GetName() == GetAddressType().GetName() {
+		return true
+	}
 	return at.name == s_at.GetName()
 }
 

@@ -36,6 +36,9 @@ func (pt *PortType) Compare(b_pt element.ElementType) bool {
 	if !ok {
 		return false
 	}
+	if s_pt.GetName() == GetPortType().GetName() || pt.GetName() == GetPortType().GetName() {
+		return true
+	}
 	return pt.name == s_pt.GetName()
 }
 
