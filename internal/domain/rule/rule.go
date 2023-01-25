@@ -11,7 +11,7 @@ type Rule struct {
 	// false by default
 	disabled bool
 	// elements of rule
-	elements map[element.ElementType][]element.Element
+	elements map[string][]element.Element
 }
 
 // Creates new rule with empty elements
@@ -19,24 +19,24 @@ type Rule struct {
 func New() *Rule {
 	return &Rule{
 		disabled: false,
-		elements: map[element.ElementType][]element.Element{},
+		elements: map[string][]element.Element{},
 	}
 }
 
 // Returns all elements of the parsed rule
-func (r *Rule) GetAllElements() map[element.ElementType][]element.Element {
+func (r *Rule) GetAllElements() map[string][]element.Element {
 	return r.elements
 }
 
 // Returns elements by element type
-func (r *Rule) GetElements(elementType element.ElementType) []element.Element {
+func (r *Rule) GetElements(elementType string) []element.Element {
 	return r.elements[elementType]
 }
 
 // Adds element to rule by element type
 // Element type gets by auto
 func (r *Rule) AddElement(element element.Element) error {
-	r.elements[element.GetType()] = append(r.elements[element.GetType()], element)
+	r.elements[element.GetType().GetName()] = append(r.elements[element.GetType().GetName()], element)
 	return nil
 }
 
@@ -58,7 +58,7 @@ func (r *Rule) IsDisabled() bool {
 func (r *Rule) String() (s string) {
 	s = "{"
 	for elem_type, elems := range r.elements {
-		s += fmt.Sprintf("\n\t\"%s\": ", elem_type.GetName())
+		s += fmt.Sprintf("\n\t\"%s\": ", elem_type)
 		s += "["
 		for i, elem := range elems {
 			s += fmt.Sprintf("\n\t\t\"%s\"", elem.GetValue())
