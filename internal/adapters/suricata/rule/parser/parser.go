@@ -76,13 +76,13 @@ func (sp *SuricataParser) Parse(rule_text string, rule_name string) (ans *parser
 	// parse src address
 	src_addr, err := ParseAddress(elements[3], constants.AddressType.(*address.AddressType))
 	if err != nil {
-		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
 	s_rule.AddElement(src_addr, constants.SrcAddressType)
 	// parse src port
 	src_port, err := ParsePort(elements[4], constants.PortType.(*port.PortType))
 	if err != nil {
-		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
 	s_rule.AddElement(src_port, constants.SrcPortType)
 	// parse direction
@@ -91,13 +91,13 @@ func (sp *SuricataParser) Parse(rule_text string, rule_name string) (ans *parser
 	// parse dst address
 	dst_addr, err := ParseAddress(elements[6], constants.AddressType.(*address.AddressType))
 	if err != nil {
-		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
 	s_rule.AddElement(dst_addr, constants.DstAddressType)
 	// parse src port
 	dst_port, err := ParsePort(elements[7], constants.PortType.(*port.PortType))
 	if err != nil {
-		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
 	s_rule.AddElement(dst_port, constants.DstPortType)
 
@@ -272,10 +272,11 @@ func ParsePort(port_str string, port_type *port.PortType) (element.Element, erro
 	if err != nil {
 		return nil, err
 	}
-	if !p_port.GetType().Compare(constants.ConstantType) &&
+	if !p_port.GetType().Compare(constants.PortType) &&
+		!p_port.GetType().Compare(constants.ConstantType) &&
 		!p_port.GetType().Compare(constants.GroupType) &&
 		!p_port.GetType().Compare(constants.PortRangeType) {
-		return nil, fmt.Errorf("Value %s is not a constant, group or port range", port_str)
+		return nil, fmt.Errorf("Value %s is not a port, constant, group or port range", port_str)
 	}
 	return p_port, err
 }
