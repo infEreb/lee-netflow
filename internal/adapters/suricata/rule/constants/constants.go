@@ -26,6 +26,7 @@ var (
 	OptionType element.ElementType = option.GetOptionType()
 	
 	AddressType element.ElementType = address.GetAddressType()
+	PortType element.ElementType = port.GetPortType()
 	ConstantType element.ElementType = constant.GetConstantType()
 )
 
