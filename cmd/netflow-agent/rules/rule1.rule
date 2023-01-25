@@ -1,0 +1,1 @@
+alert tcp $PRIVATE_NET any -> $EXTERNAL_NET any
