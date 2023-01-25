@@ -5,8 +5,10 @@ import (
 	"lee-netflow/internal/adapters/suricata/rule/element/address"
 	"lee-netflow/internal/adapters/suricata/rule/element/constant"
 	"lee-netflow/internal/adapters/suricata/rule/element/direction"
+	"lee-netflow/internal/adapters/suricata/rule/element/group"
 	"lee-netflow/internal/adapters/suricata/rule/element/option"
 	"lee-netflow/internal/adapters/suricata/rule/element/port"
+	"lee-netflow/internal/adapters/suricata/rule/element/portrange"
 	"lee-netflow/internal/adapters/suricata/rule/element/protocol"
 	"lee-netflow/internal/domain/rule/element"
 	"regexp"
@@ -28,10 +30,12 @@ var (
 	AddressType element.ElementType = address.GetAddressType()
 	PortType element.ElementType = port.GetPortType()
 	ConstantType element.ElementType = constant.GetConstantType()
+	GroupType element.ElementType = group.GetGroupType()
+	PortRangeType element.ElementType = portrange.GetPortRangeType()
 )
 
 const (
-	RE_Constant = `^!?\$[A-Z,_]+$`
+	RE_Constant = `^(!?\$[A-Z,_]+|any)$`
 	RE_Group = `^!?\[.*?(,\s?.*?){1,}\]$`
 	RE_PortRange = `^!?\[(!?\d{1,5}|!?\d{1,5}:\s?!?\d{1,5})(,\s?((!?\d{1,5})|(!?\d{1,5}:\s?!?\d{1,5})))?\]$`
 	RE_Port = `^!?\d{1,5}$`
