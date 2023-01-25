@@ -4,7 +4,6 @@ import (
 	"lee-netflow/internal/domain/rule/matcher"
 	"lee-netflow/internal/domain/rule/parser"
 	"lee-netflow/internal/domain/rule/validator"
-	"log"
 )
 
 type System interface {
@@ -13,9 +12,9 @@ type System interface {
 	// Main logic of system work
 	Run() error
 	// Loggers
-	InfoLog() *log.Logger
-	DebugLog() *log.Logger
-	ErrorLog() *log.Logger
+	InfoLog(string) error
+	DebugLog(string) error
+	ErrorLog(string) error
 	// Returns info about system
 	GetInfo() string
 }

@@ -239,14 +239,17 @@ func (s *Suricata) Run() error {
 	return nil
 }
 
-func (s *Suricata) DebugLog() *log.Logger {
-	return s.logs.debug
+func (s *Suricata) DebugLog(msg string) error {
+	s.logs.debug.Println(msg)
+	return nil
 }
-func (s *Suricata) InfoLog() *log.Logger {
-	return s.logs.info
+func (s *Suricata) InfoLog(msg string) error {
+	s.logs.info.Println(msg)
+	return nil
 }
-func (s *Suricata) ErrorLog() *log.Logger {
-	return s.logs.err
+func (s *Suricata) ErrorLog(msg string) error {
+	s.logs.err.Println(msg)
+	return nil
 }
 
 func (s *Suricata) GetInfo() string {
