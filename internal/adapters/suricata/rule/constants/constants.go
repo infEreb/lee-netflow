@@ -68,6 +68,8 @@ func IsIPv4(ipv4_str string) bool {
 		return false
 	}
 
+	ipv4_str = strings.TrimPrefix(ipv4_str, "!")
+
 	check_ip := func(ip_str string) bool {
 		ips_elems := strings.Split(ip_str, ".")
 		if len(ips_elems) != 4 {
