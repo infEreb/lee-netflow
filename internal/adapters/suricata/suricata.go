@@ -127,17 +127,18 @@ func (s *Suricata) Configure(config_path string) error {
 			if !s.validator.IsAvailable(value_const) {
 				return fmt.Errorf("Constant %s doesnt available", value_const.GetValue())
 			}
-			avl_const, err := s.validator.GetAvailableByElement(value_const)
+			avl_const_el, err := s.validator.GetAvailableByElement(value_const)
 			if err != nil {
 				return err
 			}
-			key_const.SetElement(avl_const)
+			key_const.SetElement(avl_const_el)
 			if err = s.validator.AddValid(key_const); err != nil {
 				return err
 			}
 			if err = s.validator.AddAvailable(key_const); err != nil {
 				return err
 			}
+			continue
 		}
 		// if its ipv4
 		if constants.IsIPv4(value) {
@@ -148,6 +149,7 @@ func (s *Suricata) Configure(config_path string) error {
 			if err = s.validator.AddAvailable(const_addr); err != nil {
 				return err
 			}
+			continue
 		}
 		// if constant is group
 		if constants.IsGroup(value) {
@@ -162,7 +164,10 @@ func (s *Suricata) Configure(config_path string) error {
 			if err = s.validator.AddAvailable(const_grp); err != nil {
 				return err
 			}
+			continue
 		}
+
+		return fmt.Errorf("Unexpected token %s", value)
 	}
 	for key, value := range conf_json.Ports {
 		if !constants.IsConstant(key) {
