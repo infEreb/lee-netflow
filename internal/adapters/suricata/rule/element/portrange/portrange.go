@@ -2,6 +2,7 @@ package portrange
 
 import (
 	"lee-netflow/internal/domain/rule/element"
+	"strings"
 )
 
 // PortRange type of suricata rules
@@ -38,11 +39,18 @@ type PortRange struct {
 
 // Creates new PortRange rule element of PortRange_type PortRangeType
 func New(value string, ranges [][2]element.Element, ports []element.Element) *PortRange {
+	// if value is negative
+	neg := false
+	if value[0] == '!' {
+		value = strings.TrimPrefix(value, "!")
+		neg = true
+	}
+
 	return &PortRange{
 		value:	value,
 		ranges: ranges,
 		ports: ports,
-		is_negative: false,
+		is_negative: neg,
 		portrange_type: GetPortRangeType(),
 	}
 }

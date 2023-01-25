@@ -3,8 +3,6 @@ package port
 import (
 	"fmt"
 	"lee-netflow/internal/domain/rule/element"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"golang.org/x/exp/slices"
@@ -50,14 +48,23 @@ type DstPortType struct {
 }
 
 type Port struct {
-	port_type element.ElementType
-	value     string
+	value       string
+	is_negative bool
+	port_type   element.ElementType
 }
 
 func New(value string, port_type element.ElementType) *Port {
+	// if value is negative
+	neg := false
+	if value[0] == '!' {
+		value = strings.TrimPrefix(value, "!")
+		neg = true
+	}
+
 	return &Port{
-		port_type: port_type,
-		value: value,
+		value:       value,
+		is_negative: neg,
+		port_type:   port_type,
 	}
 }
 
@@ -81,35 +88,12 @@ func GetDstPortType() *DstPortType {
 	}
 }
 
-func (p *Port) IsValid() bool {
-	return CheckValidElem(p.value)
-}
-func AddValid(const_name string, const_value []string) error {
-	if !IsConstant(const_name) {
-		return fmt.Errorf("%s isnt constant.", const_name)
-	}
-	if _, has := validPortConstants[const_name]; has {
-		return fmt.Errorf("Constant %s already is valid.", const_name)
-	}
-	for _, const_elem := range const_value {
-		if !CheckValidElem(const_elem) {
-			return fmt.Errorf("Invalid constant value: {%s: %s}", const_name, const_elem)
-		}
-	}
-
-	validPortConstants[const_name] = const_value
-
-	return nil
-}
 func DelValid(const_name string) error {
 	if _, has := validPortConstants[const_name]; !has {
 		return fmt.Errorf("Constant %s isnt exists", const_name)
 	}
 	delete(validPortConstants, const_name)
 	return nil
-}
-func (a *Port) IsAvailable() bool {
-	return CheckAvailableElem(a.value)
 }
 func AddAvailable(value string) error {
 	if slices.Contains(availablePortConstants, value) {
@@ -131,9 +115,9 @@ func DelAvailable(value string) error {
 		}
 	}
 
-	last_act := availablePortConstants[len(availablePortConstants) - 1]
+	last_act := availablePortConstants[len(availablePortConstants)-1]
 	availablePortConstants[del_idx] = last_act
-	availablePortConstants = availablePortConstants[:len(availablePortConstants) - 1]
+	availablePortConstants = availablePortConstants[:len(availablePortConstants)-1]
 
 	return nil
 }
@@ -155,89 +139,70 @@ func (p *Port) Compare(b_p element.Element) bool {
 	if !ok {
 		return false
 	}
-	return p.value == s_p.value 
+	return p.value == s_p.value
 }
 
-func IsConstant(port_const string) bool {
-	port_re, _ := regexp.MatchString(`^!?\$[A-Z,_]+$|^any$`, port_const)
-	return port_re
+func (p *Port) Negative() {
+	p.is_negative = true
 }
-func IsPort(port_str string) bool {
-	val, err := strconv.Atoi(port_str)
-	if err != nil {
-		return false
-	}
-	if val < 0 || val > 65535 {
-		return false
-	}
-
-	return true
-}
-func IsGroup(port_group string) bool {
-	port_re, _ := regexp.MatchString(`^!?\[.*?\]`, port_group)
-	return port_re
-}
-func IsRange(port_parge string) bool {
-	port_re, _ := regexp.MatchString(`^!?\[\d{0,5}:\d{0,5}\]`, port_parge)
-	return port_re
-}
-func CheckValidElem(port_elem string) bool {
-	if IsConstant(port_elem) {
-		return true
-	}
-	if IsPort(port_elem) {
-		return true
-	}
-	if IsGroup(port_elem) {
-		group_str := strings.TrimPrefix(port_elem, "!")
-		group_str = strings.TrimPrefix(group_str, "[")
-		group_str = strings.TrimSuffix(group_str, "]")
-		group_elems := strings.Split(strings.Replace(group_str, " ", "", -1), ",")
-		for _, elem := range group_elems {
-			if !CheckValidElem(elem) {
-				return false
-			}
-		}
-		return true
-	}
-	if IsRange(port_elem) {
-		port_elems := strings.Split(strings.Trim(port_elem, "[]"), ":")
-		if len(port_elems) != 2 {
-			return false
-		}
-		if !IsPort(port_elems[0]) || !IsPort(port_elems[1]) {
-			return false
-		}
-
-
-	}
-
-	return false
+func (p *Port) IsNegavite() bool {
+	return p.is_negative
 }
 
-func CheckAvailableElem(port_elem string) bool {
-	if IsConstant(port_elem) {
-		const_str := strings.TrimPrefix(port_elem, "!")
-		if slices.Contains(availablePortConstants, const_str) {
-			return true
-		}
-		return false
-	}
-	if IsPort(port_elem) {
-		return true
-	}
-	if IsGroup(port_elem) {
-		group_str := strings.Trim(port_elem, "[]")
-		group_elems := strings.Split(strings.Replace(group_str, " ", "", -1), ",")
-		for _, elem := range group_elems {
-			if !CheckAvailableElem(elem) {
-				return false
-			}
-		}
-		return true
-	}
-	// cannot be other type
-	return true
-}
+// func CheckValidElem(port_elem string) bool {
+// 	if IsConstant(port_elem) {
+// 		return true
+// 	}
+// 	if IsPort(port_elem) {
+// 		return true
+// 	}
+// 	if IsGroup(port_elem) {
+// 		group_str := strings.TrimPrefix(port_elem, "!")
+// 		group_str = strings.TrimPrefix(group_str, "[")
+// 		group_str = strings.TrimSuffix(group_str, "]")
+// 		group_elems := strings.Split(strings.Replace(group_str, " ", "", -1), ",")
+// 		for _, elem := range group_elems {
+// 			if !CheckValidElem(elem) {
+// 				return false
+// 			}
+// 		}
+// 		return true
+// 	}
+// 	if IsRange(port_elem) {
+// 		port_elems := strings.Split(strings.Trim(port_elem, "[]"), ":")
+// 		if len(port_elems) != 2 {
+// 			return false
+// 		}
+// 		if !IsPort(port_elems[0]) || !IsPort(port_elems[1]) {
+// 			return false
+// 		}
 
+// 	}
 
+// 	return false
+// }
+
+// func CheckAvailableElem(port_elem string) bool {
+// 	if IsConstant(port_elem) {
+// 		const_str := strings.TrimPrefix(port_elem, "!")
+// 		if slices.Contains(availablePortConstants, const_str) {
+// 			return true
+// 		}
+// 		return false
+// 	}
+// 	if IsPort(port_elem) {
+// 		return true
+// 	}
+// 	if IsGroup(port_elem) {
+// 		group_str := strings.Trim(port_elem, "[]")
+// 		group_elems := strings.Split(strings.Replace(group_str, " ", "", -1), ",")
+// 		for _, elem := range group_elems {
+// 			if !CheckAvailableElem(elem) {
+// 				return false
+// 			}
+// 		}
+// 		return true
+// 	}
+// 	// cannot be other type
+// 	return true
+// }

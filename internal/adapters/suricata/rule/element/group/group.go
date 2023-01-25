@@ -2,6 +2,7 @@ package group
 
 import (
 	"lee-netflow/internal/domain/rule/element"
+	"strings"
 )
 
 // Group type of suricata rules
@@ -37,9 +38,16 @@ type Group struct {
 
 // Creates new Group rule element of group_type GroupType
 func New(value string) *Group {
+	// if value is negative
+	neg := false
+	if value[0] == '!' {
+		value = strings.TrimPrefix(value, "!")
+		neg = true
+	}
+
 	return &Group{
 		value:	value,
-		is_negative: false,
+		is_negative: neg,
 		elements: []element.Element{},
 		group_type: GetGroupType(),
 	}

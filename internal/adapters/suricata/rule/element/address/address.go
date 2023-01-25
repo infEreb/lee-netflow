@@ -55,17 +55,24 @@ type DstAddressType struct {
 
 // Address rule element
 type Address struct {
-	value      string
-	isNegative bool
-	addr_type  element.ElementType
+	value       string
+	is_negative bool
+	addr_type   element.ElementType
 }
 
 // Creates new Address rule element of addr_type AddressType
 func New(value string, addr_type element.ElementType) *Address {
+	// if value is negative
+	neg := false
+	if value[0] == '!' {
+		value = strings.TrimPrefix(value, "!")
+		neg = true
+	}
+
 	return &Address{
-		value:      value,
-		isNegative: false,
-		addr_type:  addr_type,
+		value:       value,
+		is_negative: neg,
+		addr_type:   addr_type,
 	}
 }
 
@@ -117,13 +124,13 @@ func (a *Address) Compare(b_a element.Element) bool {
 	}
 	return a.value == s_a.value
 }
+
 // Sets negative value for address (that means we have '! char with this one)
 func (a *Address) Negative() {
-	a.isNegative = true
+	a.is_negative = true
 }
-
 func (a *Address) IsNegavite() bool {
-	return a.isNegative
+	return a.is_negative
 }
 
 func IsConstant(addr_const string) bool {

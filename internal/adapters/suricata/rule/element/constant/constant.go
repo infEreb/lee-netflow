@@ -2,6 +2,7 @@ package constant
 
 import (
 	"lee-netflow/internal/domain/rule/element"
+	"strings"
 )
 
 // Constant type of suricata rules
@@ -31,16 +32,23 @@ func (ct *ConstantType) Compare(b_ct element.ElementType) bool {
 type Constant struct {
 	value      string
 	element	element.Element
-	isNegative bool
+	is_negative bool
 	const_type element.ElementType
 }
 
 // Creates new Constant rule element
 func New(value string, elem element.Element) *Constant {
+	// if value is negative
+	neg := false
+	if value[0] == '!' {
+		value = strings.TrimPrefix(value, "!")
+		neg = true
+	}
+
 	return &Constant{
 		value:	value,
 		element: elem,
-		isNegative: false,
+		is_negative: neg,
 		const_type: GetConstantType(),
 	}
 }
@@ -85,9 +93,9 @@ func (c *Constant) Compare(b_c element.Element) bool {
 }
 // Sets negative value for address (that means we have '! char with this one)
 func (c *Constant) Negative() {
-	c.isNegative = true
+	c.is_negative = true
 }
 
 func (c *Constant) IsNegavite() bool {
-	return c.isNegative
+	return c.is_negative
 }
