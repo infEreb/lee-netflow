@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"lee-netflow/internal/adapters/suricata"
+	"lee-netflow/internal/domain/rule"
 	"lee-netflow/internal/domain/system"
+	"os"
 	"strings"
 )
 
@@ -16,7 +19,7 @@ var (
 )
 
 const (
-	TEST_RULE = "G:/Codes/MVS/Sources/Repos/vuz/lee-netflow/internal/rules/rule1.rule"
+	TEST_RULE = "G:/Codes/MVS/Sources/Repos/vuz/lee-netflow/internal/rules/rule1.rules"
 )
 
 func conf_flags() error {
@@ -64,18 +67,62 @@ func main() {
 		return
 	}
 	
-	rule_bytes, _ := ioutil.ReadFile(TEST_RULE_FLAG)
-	rule_text := string(rule_bytes)
-	rule_path_parts := strings.Split(TEST_RULE_FLAG, "/")
-	rule_name := rule_path_parts[len(rule_path_parts)-1]
-	rule, err := system.GetParser().Parse(rule_text, strings.TrimSuffix(rule_name, ".rule"))
+	// rule_bytes, _ := ioutil.ReadFile(TEST_RULE_FLAG)
+	rule_file, err := os.OpenFile(TEST_RULE_FLAG, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		system.ErrorLog(fmt.Sprintf("Rule parsing error: %s", err))
+		system.ErrorLog(err.Error())
 		return
 	}
-	system.InfoLog(fmt.Sprintf("Rule %s has been parsed", rule.GetName()))
+	defer rule_file.Close()
+
+	rd := bufio.NewReader(rule_file)
+	rules := []*rule.Rule{}
+	for {
+		rule_line, _, err := rd.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			system.ErrorLog(err.Error())
+			return
+		}
+		rule_line_text := string(rule_line)
+		if rule_line_text == "" {
+			continue
+		}
+		rule_path_parts := strings.Split(TEST_RULE_FLAG, "/")
+		rule_name := rule_path_parts[len(rule_path_parts)-1]
+		ans, err := system.GetParser().Parse(rule_line_text, strings.TrimSuffix(rule_name, ".rules"))
+		if err != nil && ans.IsRule {
+			system.ErrorLog(fmt.Sprintf("Rule parsing error: %s", err))
+			return
+		}
+		if err != nil && !ans.IsRule {
+			system.DebugLog(fmt.Sprintf("Rule comment parsed: %s", rule_line_text))
+			continue
+		}
+		
+		rules = append(rules, ans.Rule)
+	}
+
+	// rule_text := string(rule_bytes)
+	// rule_path_parts := strings.Split(TEST_RULE_FLAG, "/")
+	// rule_name := rule_path_parts[len(rule_path_parts)-1]
+	// ans, err := system.GetParser().Parse(rule_text, strings.TrimSuffix(rule_name, ".rule"))
+	// if err != nil && ans.IsRule {
+	// 	system.ErrorLog(fmt.Sprintf("Rule parsing error: %s", err))
+	// 	return
+	// }
+	// if err != nil && !ans.IsRule {
+	// 	system.DebugLog(fmt.Sprintf("Rule comment parsed: %s", err))
+	// 	return
+	// }
+	for _, r := range rules {
+		system.InfoLog(fmt.Sprintf("Rules %s has been parsed", r.GetName()))
+		fmt.Println(r)
+	}
 
 	
 
-	fmt.Println(rule)
 }
