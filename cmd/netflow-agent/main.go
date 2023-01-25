@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"lee-netflow/internal/adapters/suricata"
 	"lee-netflow/internal/domain/system"
+	"strings"
 )
 
 var (
@@ -59,17 +60,20 @@ func main() {
 	//end of flags
 
 	if err := system.Configure(CONF_FLAG); err != nil {
-		fmt.Printf("Configre system error: %s", err)
+		fmt.Printf("Configure system error: %s", err)
 		return
 	}
 	
 	rule_bytes, _ := ioutil.ReadFile(TEST_RULE_FLAG)
 	rule_text := string(rule_bytes)
-	rule, err := system.GetParser().Parse(rule_text)
+	rule_path_parts := strings.Split(TEST_RULE_FLAG, "/")
+	rule_name := rule_path_parts[len(rule_path_parts)-1]
+	rule, err := system.GetParser().Parse(rule_text, strings.TrimSuffix(rule_name, ".rule"))
 	if err != nil {
-		fmt.Printf("Rule parsing error: %s", err)
+		system.ErrorLog(fmt.Sprintf("Rule parsing error: %s", err))
 		return
 	}
+	system.InfoLog(fmt.Sprintf("Rule %s has been parsed", rule.GetName()))
 
 	
 
