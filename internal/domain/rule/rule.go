@@ -3,6 +3,7 @@ package rule
 import (
 	"fmt"
 	"lee-netflow/internal/domain/rule/element"
+	"strconv"
 )
 
 // Rule defindes rule struct
@@ -65,17 +66,23 @@ func (r *Rule) SetName(name string) {
 
 func (r *Rule) String() (s string) {
 	s = "{"
+	i := 0
 	for elem_type, elems := range r.elements {
 		s += fmt.Sprintf("\n\t\"%s\": ", elem_type)
 		s += "["
-		for i, elem := range elems {
+		for j, elem := range elems {
 			s += fmt.Sprintf("\n\t\t\"%s\"", elem.GetValue())
-			if i < len(elems)-1 {
+			if j < len(elems)-1 {
 				s += ","
 			}
 		}
 		s += "\n\t]"
+		i++
+		if i < len(r.elements) {
+			s += ","
+		}
 	}
+	s += fmt.Sprintf("\n\t\"Disabled\": \"%s\"", strconv.FormatBool(r.IsDisabled()))
 	s += "\n}"
 	return
 }
