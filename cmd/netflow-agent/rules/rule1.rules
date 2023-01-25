@@ -1,0 +1,5 @@
+# This pack of rules 1.0
+# Author ...
+
+# Rule explanation
+# alert tcp $PRIVATE_NET any -> $EXTERNAL_NET any (;)
