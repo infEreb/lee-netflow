@@ -7,5 +7,5 @@ import (
 // Interface of rule parser
 type Parser interface {
 	// Parses rule with
-	Parse(string) (*rule.Rule, error)
+	Parse(string, string) (*rule.Rule, error)
 }

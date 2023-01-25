@@ -39,8 +39,8 @@ func New() *SuricataParser {
 // 	return port.AddValid(const_name, const_value)
 // }
 
-func (sp *SuricataParser) Parse(rule_text string) (s_rule *rule.Rule, err error) {
-	s_rule = rule.New()
+func (sp *SuricataParser) Parse(rule_text string, rule_name string) (s_rule *rule.Rule, err error) {
+	s_rule = rule.New(rule_name)
 
 	if strings.HasPrefix(rule_text, "# ") {
 		s_rule.Disable()
@@ -69,7 +69,7 @@ func (sp *SuricataParser) Parse(rule_text string) (s_rule *rule.Rule, err error)
 	}
 	s_rule.AddElement(src_addr, constants.SrcAddressType)
 	// parse src port
-	src_port, err := ParsePort(elements[3], constants.PortType.(*port.PortType))
+	src_port, err := ParsePort(elements[4], constants.PortType.(*port.PortType))
 	if err != nil {
 		return s_rule, err
 	}
