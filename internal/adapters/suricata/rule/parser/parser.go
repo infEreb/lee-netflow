@@ -14,6 +14,7 @@ import (
 	"lee-netflow/internal/adapters/suricata/rule/element/protocol"
 	"lee-netflow/internal/domain/rule"
 	"lee-netflow/internal/domain/rule/element"
+	"lee-netflow/internal/domain/rule/parser"
 	"regexp"
 	"strings"
 )
@@ -39,21 +40,31 @@ func New() *SuricataParser {
 // 	return port.AddValid(const_name, const_value)
 // }
 
-func (sp *SuricataParser) Parse(rule_text string, rule_name string) (s_rule *rule.Rule, err error) {
-	s_rule = rule.New(rule_name)
 
-	if strings.HasPrefix(rule_text, "# ") {
+
+func (sp *SuricataParser) Parse(rule_text string, rule_name string) (ans *parser.ParserAnswer, err error) {
+	s_rule := rule.New(rule_name)
+
+	if strings.HasPrefix(rule_text, "#") {
 		s_rule.Disable()
 	}
-	rule_str := strings.TrimPrefix(rule_text, "# ")
+	rule_str := strings.TrimPrefix(rule_text, "#")
+	for ; rule_str != strings.TrimPrefix(rule_str, " "); rule_str = strings.TrimPrefix(rule_str, " ") {
+	}
 
 	elements_re, _ := regexp.Compile(`(.*?) (.*?) (!?\[.*?\]|.*?) (!?\[.*?\]|.*?) (->|<-|<>) (!?\[.*?\]|.*?) (!?\[.*?\]|.*?) (\(.*?\))$`)
 	elements := elements_re.FindStringSubmatch(rule_str)
 	if elements == nil {
-		return nil, fmt.Errorf("Bad rule format.")
+		if s_rule.IsDisabled() {
+			return &parser.ParserAnswer{IsRule: false, Rule: nil}, fmt.Errorf("Not a rule. Just comment")
+		}
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("Bad rule format: %s", rule_text)
 	}
 	if len(elements) != 9 {
-		return nil, fmt.Errorf("Bad rule format.")
+		if s_rule.IsDisabled() {
+			return &parser.ParserAnswer{IsRule: false, Rule: nil}, fmt.Errorf("Not a rule. Just comment")
+		}
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("Bad rule format: %s", rule_text)
 	}
 
 	// action parse
@@ -65,13 +76,13 @@ func (sp *SuricataParser) Parse(rule_text string, rule_name string) (s_rule *rul
 	// parse src address
 	src_addr, err := ParseAddress(elements[3], constants.AddressType.(*address.AddressType))
 	if err != nil {
-		return s_rule, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
 	}
 	s_rule.AddElement(src_addr, constants.SrcAddressType)
 	// parse src port
 	src_port, err := ParsePort(elements[4], constants.PortType.(*port.PortType))
 	if err != nil {
-		return s_rule, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
 	}
 	s_rule.AddElement(src_port, constants.SrcPortType)
 	// parse direction
@@ -80,13 +91,13 @@ func (sp *SuricataParser) Parse(rule_text string, rule_name string) (s_rule *rul
 	// parse dst address
 	dst_addr, err := ParseAddress(elements[6], constants.AddressType.(*address.AddressType))
 	if err != nil {
-		return s_rule, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
 	}
 	s_rule.AddElement(dst_addr, constants.DstAddressType)
 	// parse src port
 	dst_port, err := ParsePort(elements[7], constants.PortType.(*port.PortType))
 	if err != nil {
-		return s_rule, err
+		return &parser.ParserAnswer{IsRule: true, Rule: nil}, err
 	}
 	s_rule.AddElement(dst_port, constants.DstPortType)
 
@@ -115,7 +126,7 @@ func (sp *SuricataParser) Parse(rule_text string, rule_name string) (s_rule *rul
 	// 	}
 	// }
 
-	return s_rule, nil
+	return &parser.ParserAnswer{IsRule: true, Rule: s_rule}, nil
 }
 
 // return element of correct type
@@ -164,7 +175,6 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 				eof_elem = true
 			}
 
-
 			elem += string(ch)
 		}
 		return pr, nil
@@ -177,7 +187,7 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 		eof_elem := false
 
 		for _, ch := range elem_str {
-			
+
 			if ch == '[' && in_grp == 0 {
 				in_grp++
 				continue
@@ -194,11 +204,11 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 				continue
 			}
 			// if we're inside 1st group and char is ']'
-			if ch == ']' && in_grp == 1 { 
+			if ch == ']' && in_grp == 1 {
 				in_grp--
 				eof_elem = true
 			}
-			// if we're inside 2nd group 
+			// if we're inside 2nd group
 			if in_grp > 1 {
 				elem += string(ch)
 				continue
@@ -212,11 +222,11 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 			if in_grp == 1 && ch == ' ' {
 				continue
 			}
-			if in_grp == 1 && !eof_elem{
+			if in_grp == 1 && !eof_elem {
 				elem += string(ch)
 				continue
 			}
-			
+
 			if eof_elem {
 				p_elem, err := ParseGroupElements(elem, elem_type)
 				if err != nil {
@@ -228,11 +238,11 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 				continue
 			}
 			// elem += string(ch)
-			
+
 		}
 		return grp, nil
 	}
-	
+
 	return action.New("NULL"), fmt.Errorf("Has doesnt matched any element")
 }
 
@@ -249,9 +259,9 @@ func ParseAddress(addr_str string, addr_type *address.AddressType) (element.Elem
 	if err != nil {
 		return nil, err
 	}
-	if !p_addr.GetType().Compare(constants.AddressType) && 
-	!p_addr.GetType().Compare(constants.ConstantType) &&
-	!p_addr.GetType().Compare(constants.GroupType) {
+	if !p_addr.GetType().Compare(constants.AddressType) &&
+		!p_addr.GetType().Compare(constants.ConstantType) &&
+		!p_addr.GetType().Compare(constants.GroupType) {
 		return nil, fmt.Errorf("Value %s is not an address, constant or group", addr_str)
 	}
 	return p_addr, nil
@@ -262,10 +272,10 @@ func ParsePort(port_str string, port_type *port.PortType) (element.Element, erro
 	if err != nil {
 		return nil, err
 	}
-	if !p_port.GetType().Compare(constants.AddressType) && 
-	!p_port.GetType().Compare(constants.ConstantType) &&
-	!p_port.GetType().Compare(constants.GroupType) &&
-	!p_port.GetType().Compare(constants.PortRangeType) {
+	if !p_port.GetType().Compare(constants.AddressType) &&
+		!p_port.GetType().Compare(constants.ConstantType) &&
+		!p_port.GetType().Compare(constants.GroupType) &&
+		!p_port.GetType().Compare(constants.PortRangeType) {
 		return nil, fmt.Errorf("Value %s is not an address, constant, group or port range", p_port)
 	}
 	return p_port, err
