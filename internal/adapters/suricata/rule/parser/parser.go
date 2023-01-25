@@ -243,7 +243,7 @@ func ParseGroupElements(elem_str string, elem_type element.ElementType) (element
 		return grp, nil
 	}
 
-	return action.New("NULL"), fmt.Errorf("Has doesnt matched any element")
+	return action.New("NULL"), fmt.Errorf("Has doesnt matched any element: %s", elem_str)
 }
 
 func ParseAction(act_str string) (*action.Action, error) {
@@ -272,11 +272,10 @@ func ParsePort(port_str string, port_type *port.PortType) (element.Element, erro
 	if err != nil {
 		return nil, err
 	}
-	if !p_port.GetType().Compare(constants.AddressType) &&
-		!p_port.GetType().Compare(constants.ConstantType) &&
+	if !p_port.GetType().Compare(constants.ConstantType) &&
 		!p_port.GetType().Compare(constants.GroupType) &&
 		!p_port.GetType().Compare(constants.PortRangeType) {
-		return nil, fmt.Errorf("Value %s is not an address, constant, group or port range", p_port)
+		return nil, fmt.Errorf("Value %s is not a constant, group or port range", port_str)
 	}
 	return p_port, err
 }
