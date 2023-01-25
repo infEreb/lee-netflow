@@ -7,5 +7,7 @@
 
     "ports": {
         "$DB_PORTS": "[5453, 1301, 1801]"
-    }
+    },
+
+    "logs_dir_path": "G:/Codes/MVS/Sources/Repos/vuz/lee-netflow/cmd/netflow-agent/logs"
 }
