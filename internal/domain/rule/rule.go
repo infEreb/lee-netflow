@@ -29,14 +29,13 @@ func (r *Rule) GetAllElements() map[string][]element.Element {
 }
 
 // Returns elements by element type
-func (r *Rule) GetElements(elementType string) []element.Element {
-	return r.elements[elementType]
+func (r *Rule) GetElements(el_type element.ElementType) []element.Element {
+	return r.elements[el_type.GetName()]
 }
 
 // Adds element to rule by element type
-// Element type gets by auto
-func (r *Rule) AddElement(element element.Element) error {
-	r.elements[element.GetType().GetName()] = append(r.elements[element.GetType().GetName()], element)
+func (r *Rule) AddElement(el element.Element, el_type element.ElementType) error {
+	r.elements[el_type.GetName()] = append(r.elements[el_type.GetName()], el)
 	return nil
 }
 

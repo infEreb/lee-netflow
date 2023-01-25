@@ -58,37 +58,37 @@ func (sp *SuricataParser) Parse(rule_text string) (s_rule *rule.Rule, err error)
 
 	// action parse
 	act, _ := ParseAction(elements[1])
-	s_rule.AddElement(act)
+	s_rule.AddElement(act, constants.ActionType)
 	// protocol parse
 	proto, _ := ParseProtocol(elements[2])
-	s_rule.AddElement(proto)
+	s_rule.AddElement(proto, constants.ProtocolType)
 	// parse src address
-	src_addr, err := ParseAddress(elements[3], constants.SrcAddressType.(*address.AddressType))
+	src_addr, err := ParseAddress(elements[3], constants.AddressType.(*address.AddressType))
 	if err != nil {
 		return s_rule, err
 	}
-	s_rule.AddElement(src_addr)
+	s_rule.AddElement(src_addr, constants.SrcAddressType)
 	// parse src port
-	src_port, err := ParsePort(elements[3], constants.SrcPortType.(*port.PortType))
+	src_port, err := ParsePort(elements[3], constants.PortType.(*port.PortType))
 	if err != nil {
 		return s_rule, err
 	}
-	s_rule.AddElement(src_port)
+	s_rule.AddElement(src_port, constants.SrcPortType)
 	// parse direction
 	dir, err := ParseDirection(elements[5])
-	s_rule.AddElement(dir)
+	s_rule.AddElement(dir, constants.DirectionType)
 	// parse dst address
-	dst_addr, err := ParseAddress(elements[6], constants.DstAddressType.(*address.AddressType))
+	dst_addr, err := ParseAddress(elements[6], constants.AddressType.(*address.AddressType))
 	if err != nil {
 		return s_rule, err
 	}
-	s_rule.AddElement(dst_addr)
+	s_rule.AddElement(dst_addr, constants.DstAddressType)
 	// parse src port
-	dst_port, err := ParsePort(elements[7], constants.DstPortType.(*port.PortType))
+	dst_port, err := ParsePort(elements[7], constants.PortType.(*port.PortType))
 	if err != nil {
 		return s_rule, err
 	}
-	s_rule.AddElement(dst_port)
+	s_rule.AddElement(dst_port, constants.DstPortType)
 
 	opts_str := strings.TrimPrefix(elements[8], "(")
 	opts_str = strings.TrimSuffix(opts_str, ")")
@@ -101,7 +101,7 @@ func (sp *SuricataParser) Parse(rule_text string) (s_rule *rule.Rule, err error)
 
 	opts := strings.Split(opts_str, ";")
 	for _, opt := range opts {
-		s_rule.AddElement(option.New(opt))
+		s_rule.AddElement(option.New(opt), constants.OptionType)
 	}
 
 	// for _, elems := range rule.GetAllElements() {
@@ -244,14 +244,31 @@ func ParseProtocol(proto_str string) (*protocol.Protocol, error) {
 	return protocol.New(proto_str), nil
 }
 
-func ParseAddress(addr_str string, addr_type *address.AddressType) (*address.Address, error) {
+func ParseAddress(addr_str string, addr_type *address.AddressType) (element.Element, error) {
 	p_addr, err := ParseGroupElements(addr_str, addr_type)
-	return p_addr.(*address.Address), err
+	if err != nil {
+		return nil, err
+	}
+	if !p_addr.GetType().Compare(constants.AddressType) && 
+	!p_addr.GetType().Compare(constants.ConstantType) &&
+	!p_addr.GetType().Compare(constants.GroupType) {
+		return nil, fmt.Errorf("Value %s is not an address, constant or group", addr_str)
+	}
+	return p_addr, nil
 }
 
-func ParsePort(port_str string, port_type *port.PortType) (*port.Port, error) {
+func ParsePort(port_str string, port_type *port.PortType) (element.Element, error) {
 	p_port, err := ParseGroupElements(port_str, port_type)
-	return p_port.(*port.Port), err
+	if err != nil {
+		return nil, err
+	}
+	if !p_port.GetType().Compare(constants.AddressType) && 
+	!p_port.GetType().Compare(constants.ConstantType) &&
+	!p_port.GetType().Compare(constants.GroupType) &&
+	!p_port.GetType().Compare(constants.PortRangeType) {
+		return nil, fmt.Errorf("Value %s is not an address, constant, group or port range", p_port)
+	}
+	return p_port, err
 }
 
 func ParseConstant(const_str string) (*constant.Constant, error) {
