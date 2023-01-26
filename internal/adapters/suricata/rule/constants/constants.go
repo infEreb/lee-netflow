@@ -6,6 +6,7 @@ import (
 	"lee-netflow/internal/adapters/suricata/rule/element/constant"
 	"lee-netflow/internal/adapters/suricata/rule/element/direction"
 	"lee-netflow/internal/adapters/suricata/rule/element/group"
+	"lee-netflow/internal/adapters/suricata/rule/element/keyword"
 	"lee-netflow/internal/adapters/suricata/rule/element/option"
 	"lee-netflow/internal/adapters/suricata/rule/element/port"
 	"lee-netflow/internal/adapters/suricata/rule/element/portrange"
@@ -20,50 +21,75 @@ import (
 var (
 	ActionType element.ElementType = action.GetActionType()
 	ProtocolType element.ElementType = protocol.GetProtocolType()
-	SrcAddressType element.ElementType = address.GetSrcAddressType()
-	SrcPortType element.ElementType = port.GetSrcPortType()
-	DirectionType element.ElementType = direction.GetDirectionType()
-	DstAddressType element.ElementType = address.GetDstAddressType()
-	DstPortType element.ElementType = port.GetDstPortType()
-	OptionType element.ElementType = option.GetOptionType()
 	
 	AddressType element.ElementType = address.GetAddressType()
+	SrcAddressType element.ElementType = address.GetSrcAddressType()
+	DstAddressType element.ElementType = address.GetDstAddressType()
+	
 	PortType element.ElementType = port.GetPortType()
-	ConstantType element.ElementType = constant.GetConstantType()
-	GroupType element.ElementType = group.GetGroupType()
+	SrcPortType element.ElementType = port.GetSrcPortType()
+	DstPortType element.ElementType = port.GetDstPortType()
+
 	PortRangeType element.ElementType = portrange.GetPortRangeType()
+	SrcPortRangeType element.ElementType = portrange.GetSrcPortRangeType()
+	DstPortRangeType element.ElementType = portrange.GetDstPortRangeType()
+	
+	DirectionType element.ElementType = direction.GetDirectionType()
+	OptionType element.ElementType = option.GetOptionType()
+	
+	ConstantType element.ElementType = constant.GetConstantType()
+	SrcConstantType element.ElementType = constant.GetSrcConstantType()
+	DstConstantType element.ElementType = constant.GetDstConstantType()
+
+	KeywordType element.ElementType = keyword.GetKeywordType()
+	SrcKeywordType element.ElementType = keyword.GetSrcKeywordType()
+	DstKeywordType element.ElementType = keyword.GetDstKeywordType()
+
+	GroupType element.ElementType = group.GetGroupType()
+	SrcGroupType element.ElementType = group.GetSrcGroupType()
+	DstGroupType element.ElementType = group.GetDstGroupType()
 )
 
 const (
-	RE_Constant = `^(!?\$[A-Z,_]+|any)$`
-	RE_Group = `^!?\[.*?(,\s?.*?){1,}\]$`
-	RE_PortRange = `^!?(\[(!?\d{1,5}|!?(\d{0,5}:\s?\d{1,5}|\d{1,5}:\s?\d{0,5}))(,\s?((!?\d{1,5})|(!?(\d{0,5}:\s?\d{1,5}|\d{1,5}:\s?\d{0,5}))))?\]|(\d{0,5}:\d{1,5}|\d{1,5}:\d{0,5}))$`
-	RE_Port = `^!?\d{1,5}$`
-	RE_IPv4 = `^!?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(/\d{1,2})?`
+	RE_CONSTANT = `^(!?\$[A-Z,_]+)$`
+	RE_KEYWORD = `^any$`
+	RE_GROUP = `^!?\[.*?(,\s?.*?){1,}\]$`
+	RE_PORT_RANGE_NEW = `^!?(\d{1,5}:\d{0,5}|\d{0,5}:\d{1,5})$`
+	RE_PORT_RANGE = `^!?(\[(!?\d{1,5}|!?(\d{0,5}:\s?\d{1,5}|\d{1,5}:\s?\d{0,5}))(,\s?((!?\d{1,5})|(!?(\d{0,5}:\s?\d{1,5}|\d{1,5}:\s?\d{0,5}))))?\]|(\d{0,5}:\d{1,5}|\d{1,5}:\d{0,5}))$`
+	RE_PORT = `^!?\d{1,5}$`
+	RE_IPV4 = `^!?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(/\d{1,2})?`
+
+	MIN_PORT = 0
+	MAX_PORT = 65535
 )
 
+func IsKeyword(keyword string) bool {
+	matched, _ := regexp.MatchString(RE_KEYWORD, keyword)
+	return matched
+}
+
 func IsConstant(const_str string) bool {
-	matched, _ := regexp.MatchString(RE_Constant, const_str)
+	matched, _ := regexp.MatchString(RE_CONSTANT, const_str)
 	return matched
 }
 
 func IsGroup(group_str string) bool {
-	matched, _ := regexp.MatchString(RE_Group, group_str)
+	matched, _ := regexp.MatchString(RE_GROUP, group_str)
 	return matched && !IsPortRange(group_str)
 }
 
 func IsPortRange(range_str string) bool {
-	matched, _ := regexp.MatchString(RE_PortRange, range_str)
+	matched, _ := regexp.MatchString(RE_PORT_RANGE_NEW, range_str)
 	return matched
 }
 
 func IsPort(port_str string) bool {
-	matched, _ := regexp.MatchString(RE_Port, port_str)
+	matched, _ := regexp.MatchString(RE_PORT, port_str)
 	return matched
 }
 
 func IsIPv4(ipv4_str string) bool {
-	matched, _ := regexp.MatchString(RE_IPv4, ipv4_str)
+	matched, _ := regexp.MatchString(RE_IPV4, ipv4_str)
 	if !matched {
 		return false
 	}
@@ -105,4 +131,21 @@ func IsIPv4(ipv4_str string) bool {
 		return check_ip(ip_mask[0]) && chek_mask(ip_mask[1])
 	}
 	return false
+}
+
+func IsSrcType(src_el element.ElementType) bool {
+	return src_el.Compare(SrcAddressType) ||
+		src_el.Compare(SrcPortType) ||
+		src_el.Compare(SrcConstantType) ||
+		src_el.Compare(SrcKeywordType) ||
+		src_el.Compare(SrcGroupType) ||
+		src_el.Compare(SrcPortRangeType)
+}
+func IsDstType(dst_el element.ElementType) bool {
+	return dst_el.Compare(DstAddressType) ||
+		dst_el.Compare(DstPortType) ||
+		dst_el.Compare(DstConstantType) ||
+		dst_el.Compare(DstKeywordType) ||
+		dst_el.Compare(DstGroupType) ||
+		dst_el.Compare(DstPortRangeType)
 }
