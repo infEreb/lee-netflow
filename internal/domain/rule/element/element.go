@@ -23,5 +23,10 @@ type Element interface {
 	// Returns layer with data that has been matched and result of match 
 	Match(gopacket.Packet) (gopacket.Layer, bool)
 
+	SetSrcType()
+	SetDstType()
+
+	Clone() Element
+
 	String() string
 }
