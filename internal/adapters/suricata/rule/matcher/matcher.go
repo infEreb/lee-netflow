@@ -19,7 +19,7 @@ func (sm *SuricataMatcher) Match(pk gopacket.Packet, rule *rule.Rule) (matched b
 		for _, el := range els {
 			_, matched := el.Match(pk)
 			if !matched {
-				return false, fmt.Errorf("Element %s dont matched for packet %s", el.String(), pk.Dump())
+				return false, fmt.Errorf("Element %s dont matched for packet %s", el.String(), pk.String())
 			}
 		}
 	}
