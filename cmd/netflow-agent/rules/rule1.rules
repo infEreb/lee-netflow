@@ -2,4 +2,4 @@
 # Author ...
 
 # Rule explanation
-# alert tcp $PRIVATE_NET any -> $EXTERNAL_NET any (;)
+alert tcp $PRIVATE_NET $HIGH_PORTS -> $EXTERNAL_NET $HIGH_PORTS (;)
