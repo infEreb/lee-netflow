@@ -93,7 +93,7 @@ func main() {
 		}
 		rule_path_parts := strings.Split(TEST_RULE_FLAG, "/")
 		rule_name := rule_path_parts[len(rule_path_parts)-1]
-		ans, err := system.GetParser().Parse(rule_line_text, strings.TrimSuffix(rule_name, ".rules"))
+		ans, err := system.GetParser().Parse(rule_line_text, strings.TrimSuffix(rule_name, ".rules"), system.GetValidator())
 		if err != nil && ans.IsRule {
 			system.ErrorLog(fmt.Sprintf("Rule parsing error: %s", err))
 			return
@@ -102,7 +102,10 @@ func main() {
 			system.DebugLog(fmt.Sprintf("Rule comment parsed: %s", rule_line_text))
 			continue
 		}
-		
+		if ans.IsRule {
+			system.InfoLog(fmt.Sprintf("Rule %s has been parsed", ans.Rule.GetText()))
+			system.DebugLog(fmt.Sprintf("Elements of rule %s: %s", ans.Rule.GetText(), ans.Rule.String()))			
+		}
 		rules = append(rules, ans.Rule)
 	}
 
@@ -119,7 +122,7 @@ func main() {
 	// 	return
 	// }
 	for _, r := range rules {
-		system.InfoLog(fmt.Sprintf("Rules %s has been parsed", r.GetName()))
+		system.InfoLog(fmt.Sprintf("Rule %s has been parsed", r.GetName()))
 		fmt.Println(r)
 	}
 
