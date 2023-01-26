@@ -74,13 +74,13 @@ func (sp *SuricataParser) Parse(rule_text string, rule_name string) (ans *parser
 	proto, _ := ParseProtocol(elements[2])
 	s_rule.AddElement(proto, constants.ProtocolType)
 	// parse src address
-	src_addr, err := ParseAddress(elements[3], constants.AddressType.(*address.AddressType))
+	src_addr, err := ParseAddress(elements[3], constants.SrcAddressType)
 	if err != nil {
 		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
 	s_rule.AddElement(src_addr, constants.SrcAddressType)
 	// parse src port
-	src_port, err := ParsePort(elements[4], constants.PortType.(*port.PortType))
+	src_port, err := ParsePort(elements[4], constants.SrcPortType)
 	if err != nil {
 		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
@@ -89,13 +89,13 @@ func (sp *SuricataParser) Parse(rule_text string, rule_name string) (ans *parser
 	dir, err := ParseDirection(elements[5])
 	s_rule.AddElement(dir, constants.DirectionType)
 	// parse dst address
-	dst_addr, err := ParseAddress(elements[6], constants.AddressType.(*address.AddressType))
+	dst_addr, err := ParseAddress(elements[6], constants.DstAddressType)
 	if err != nil {
 		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
 	s_rule.AddElement(dst_addr, constants.DstAddressType)
 	// parse src port
-	dst_port, err := ParsePort(elements[7], constants.PortType.(*port.PortType))
+	dst_port, err := ParsePort(elements[7], constants.DstPortType)
 	if err != nil {
 		return &parser.ParserAnswer{IsRule: true, Rule: nil}, fmt.Errorf("%s. Rule: %s", err.Error(), rule_str)
 	}
@@ -254,7 +254,7 @@ func ParseProtocol(proto_str string) (*protocol.Protocol, error) {
 	return protocol.New(proto_str), nil
 }
 
-func ParseAddress(addr_str string, addr_type *address.AddressType) (element.Element, error) {
+func ParseAddress(addr_str string, addr_type element.ElementType) (element.Element, error) {
 	p_addr, err := ParseGroupElements(addr_str, addr_type)
 	if err != nil {
 		return nil, err
@@ -267,7 +267,7 @@ func ParseAddress(addr_str string, addr_type *address.AddressType) (element.Elem
 	return p_addr, nil
 }
 
-func ParsePort(port_str string, port_type *port.PortType) (element.Element, error) {
+func ParsePort(port_str string, port_type element.ElementType) (element.Element, error) {
 	p_port, err := ParseGroupElements(port_str, port_type)
 	if err != nil {
 		return nil, err
