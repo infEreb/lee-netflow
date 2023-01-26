@@ -146,6 +146,10 @@ func (a *Address) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 		return nil, false
 	}
 	ipv4 := ipv4_layer.(*layers.IPv4)
+	if !strings.Contains(a.GetValue(), "/") {
+		a.SetValue(a.GetValue() + "/32")
+	}
+	
 	_, net_cidr, err := net.ParseCIDR(a.GetValue())
 	if err != nil {
 		return nil, false
