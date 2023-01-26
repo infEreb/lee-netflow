@@ -269,7 +269,7 @@ func (s *Suricata) InfoLog(msg string) error {
 }
 func (s *Suricata) ErrorLog(msg string) error {
 	if s.log_level == LOG_DEBUG_LVL || s.log_level == LOG_INFO_LVL || s.log_level == LOG_ERROR_LVL {
-		s.logs.info.Println(msg)
+		s.logs.err.Println(msg)
 	}
 	return nil
 }
