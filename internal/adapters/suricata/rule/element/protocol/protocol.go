@@ -109,6 +109,14 @@ func (p *Protocol) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool
 			layer = udp_layer
 			break
 		}
+		case "icmp": {
+			icmp_layer := pk.Layer(layers.LayerTypeICMPv4)
+			if icmp_layer == nil {
+				return nil, false
+			}
+			layer = icmp_layer
+			break
+		}
 		default: {
 			return nil, false
 		}
