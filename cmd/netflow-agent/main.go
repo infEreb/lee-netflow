@@ -115,28 +115,26 @@ func main() {
 
 
 	// Find all devices
-    // devices, err := pcap.FindAllDevs()
-    // if err != nil {
-    //     fmt.Printf(err.Error())
-    // }
+    devices, err := pcap.FindAllDevs()
+    if err != nil {
+        fmt.Printf(err.Error())
+    }
 
     // Print device information
 	// needed_device := ""
-    // fmt.Println("Devices found:")
+    fmt.Println("Devices found:")
 	// iface, err := net.InterfaceByName(system.GetCaptureInfo().Ifaces[0])
-	// if err != nil {
-	// 	system.ErrorLog(err.Error())
-	// }
-    // for _, device := range devices {
-	// 	fmt.Println("\nName: ", device.Name)
-    //     fmt.Println("Description: ", device.Description)
-    //     fmt.Println("Devices addresses: ", device.Description)
-    //     for _, address := range device.Addresses {
-	// 		if_addr, _ := iface.Addrs()
-	// 		if net.
-    //         fmt.Println("- IP address: ", address.IP)
-    //     }
-    // }
+	if err != nil {
+		system.ErrorLog(err.Error())
+	}
+    for _, device := range devices {
+		fmt.Println("\nName: ", device.Name)
+        fmt.Println("Description: ", device.Description)
+        fmt.Println("Devices addresses: ", device.Description)
+        for _, address := range device.Addresses {
+            fmt.Println("- IP address: ", address.IP)
+        }
+    }
 	
 
 
