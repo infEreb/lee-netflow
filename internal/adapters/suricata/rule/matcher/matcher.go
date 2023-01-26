@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"fmt"
 	"lee-netflow/internal/domain/rule"
 
 	"github.com/google/gopacket"
@@ -19,7 +18,7 @@ func (sm *SuricataMatcher) Match(pk gopacket.Packet, rule *rule.Rule) (matched b
 		for _, el := range els {
 			_, matched := el.Match(pk)
 			if !matched {
-				return false, fmt.Errorf("Element %s dont matched for packet %s", el.String(), pk.String())
+				return false, nil// fmt.Errorf("Element %s dont matched for packet %s", el.String(), pk.String())
 			}
 		}
 	}
