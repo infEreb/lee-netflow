@@ -1,12 +1,19 @@
 {
     "addresses": {
         "$PRIVATE_NET": "[10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16]",
-        "$EXTERNAL_NET": "!$PRIVATE_NET"
+        "$EXTERNAL_NET": "!$PRIVATE_NET",
+        "$HOME_NET": "192.168.0.0/16",
+        "$SMTP_SERVERS": "[192.168.0.201, 192.168.0.202]"
     },
 
     "ports": {
-        "$DB_PORTS": "[5453, 1301, 1801]"
+        "$DB_PORTS": "[5453, 1301, 1801]",
+        "$HIGH_PORTS": "1024:",
+        "$HTTPS_PORTS": "[8443, 443]",
+        "$HTTP_PORTS": "[8080, 80]",
+        "$SSH_PORTS": "[22, 10022, 11022]"
     },
 
-    "logs_dir_path": "G:/Codes/MVS/Sources/Repos/vuz/lee-netflow/cmd/netflow-agent/logs"
+    "logs_dir_path": "G:/Codes/MVS/Sources/Repos/vuz/lee-netflow/cmd/netflow-agent/logs",
+    "log_level": "DEBUG" 
 }
