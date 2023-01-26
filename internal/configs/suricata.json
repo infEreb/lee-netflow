@@ -15,5 +15,14 @@
     },
 
     "logs_dir_path": "G:/Codes/MVS/Sources/Repos/vuz/lee-netflow/cmd/netflow-agent/logs",
-    "log_level": "DEBUG" 
+    "log_level": "DEBUG",
+
+    "capture": {
+        "ifaces": [
+            "Ethernet"
+        ],
+        "snaplen": 12000,
+        "promisc": true,
+        "timeout": 1
+    }
 }
