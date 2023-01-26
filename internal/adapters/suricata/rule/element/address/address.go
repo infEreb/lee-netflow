@@ -151,12 +151,12 @@ func (a *Address) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 		return nil, false
 	}
 
-	if a.GetType() == GetSrcAddressType() {
+	if a.GetType().Compare(GetSrcAddressType()) {
 		if net_cidr.Contains(ipv4.SrcIP) != a.IsNegavite() {	// contains address XOR negative (!a.value)
 			return ipv4, true
 		}
 	}
-	if a.GetType() == GetDstAddressType() {
+	if a.GetType().Compare(GetDstAddressType()) {
 		if net_cidr.Contains(ipv4.DstIP) != a.IsNegavite() {	// contains address XOR negative (!a.value)
 			return ipv4, true
 		}

@@ -142,12 +142,12 @@ func (g *Group) Compare(b_g element.Element) bool {
 func (g *Group) Match(pk gopacket.Packet) (layer gopacket.Layer, matched  bool) {
 	for _, el := range g.GetElements() {
 		layer, matched = el.Match(pk)
-		if !(!matched != g.IsNegavite()) {		// !(!matched XOR g.is_negative) (!group) ---- XAND oparation
-			return nil, false
+		if matched != g.IsNegavite() {		// matched XOR g.is_negative
+			return layer, true
 		}
 	}
 
-	return layer, matched
+	return layer, false
 }
 
 func (g *Group) String() string {

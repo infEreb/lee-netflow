@@ -137,7 +137,7 @@ func (c *Constant) Compare(b_c element.Element) bool {
 func (c *Constant) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool) {
 	layer, matched = c.element.Match(pk)
 	if matched != c.IsNegavite() { // XOR
-		return layer, matched
+		return layer, true
 	}
 
 	return nil, false

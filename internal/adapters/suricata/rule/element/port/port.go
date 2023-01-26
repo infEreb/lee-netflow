@@ -167,12 +167,12 @@ func (p *Port) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 
 	src := trans_layer.TransportFlow().Src().String()
 	dst := trans_layer.TransportFlow().Dst().String()
-	if p.GetType() == GetSrcPortType() {
+	if p.GetType().Compare(GetSrcPortType()) {
 		if (p.GetValue() == src) != p.IsNegavite() {	// contains Port XOR negative (!a.value)
 			return trans_layer, true
 		}
 	}
-	if p.GetType() == GetDstPortType() {
+	if p.GetType().Compare(GetDstPortType()) {
 		if (p.GetValue() == dst) != p.IsNegavite() {	// contains Port XOR negative (!a.value)
 			return trans_layer, true
 		}

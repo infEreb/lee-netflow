@@ -154,7 +154,7 @@ func (pr *PortRange) Compare(b_pr element.Element) bool {
 
 func (pr *PortRange) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool) {
 	trans_layer := pk.TransportLayer()
-	if trans_layer != nil {
+	if trans_layer == nil {
 		return nil, false
 	}
 
