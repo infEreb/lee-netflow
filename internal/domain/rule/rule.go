@@ -8,7 +8,8 @@ import (
 
 // Rule defindes rule struct
 type Rule struct {
-	name string
+	name      string
+	rule_text string
 	// rule is disabled flag
 	// false by default
 	disabled bool
@@ -18,9 +19,10 @@ type Rule struct {
 
 // Creates new rule with empty elements
 // And enabled as default
-func New(name string) *Rule {
+func New(name string, text string) *Rule {
 	return &Rule{
-		name: name,
+		name:     name,
+		rule_text: text,
 		disabled: false,
 		elements: map[string][]element.Element{},
 	}
@@ -64,25 +66,26 @@ func (r *Rule) SetName(name string) {
 	r.name = name
 }
 
+func (r *Rule) GetText() string {
+	return r.rule_text
+}
+
 func (r *Rule) String() (s string) {
 	s = "{"
 	i := 0
 	for elem_type, elems := range r.elements {
-		s += fmt.Sprintf("\n\t\"%s\": ", elem_type)
-		s += "["
-		for j, elem := range elems {
-			s += fmt.Sprintf("\n\t\t\"%s\"", elem.GetValue())
-			if j < len(elems)-1 {
-				s += ","
-			}
+		s += fmt.Sprintf("\"%s\": {", elem_type)
+		for _, el := range elems {
+			s += el.String()
 		}
-		s += "\n\t]"
+		s += "}"
 		i++
 		if i < len(r.elements) {
-			s += ","
+			s += ", "
 		}
+
 	}
-	s += fmt.Sprintf("\n\t\"Disabled\": \"%s\"", strconv.FormatBool(r.IsDisabled()))
-	s += "\n}"
+	s += fmt.Sprintf(", \"Disabled\": %s", strconv.FormatBool(r.IsDisabled()))
+	s += "}"
 	return
 }
