@@ -1,8 +1,11 @@
 package constant
 
 import (
+	"fmt"
 	"lee-netflow/internal/domain/rule/element"
 	"strings"
+
+	"github.com/google/gopacket"
 )
 
 // Constant type of suricata rules
@@ -91,6 +94,20 @@ func (c *Constant) Compare(b_c element.Element) bool {
 	}
 	return c.value == s_c.value // && c.element.GetType().Compare(s_c.element.GetType()) && c.element.GetValue() == s_c.element.GetValue()
 }
+
+func (c *Constant) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool) {
+	layer, matched = c.element.Match(pk)
+	if matched != c.IsNegavite() {		// XOR
+		return layer, matched
+	}
+
+	return nil, false
+}
+
+func (c *Constant) String() string {
+	return fmt.Sprintf("\"%s\": %s", c.GetValue(), c.GetElement().String())
+}
+
 // Sets negative value for address (that means we have '! char with this one)
 func (c *Constant) Negative() {
 	c.is_negative = true

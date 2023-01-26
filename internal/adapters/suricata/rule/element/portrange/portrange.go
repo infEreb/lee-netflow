@@ -1,8 +1,11 @@
 package portrange
 
 import (
+	"fmt"
 	"lee-netflow/internal/domain/rule/element"
 	"strings"
+
+	"github.com/google/gopacket"
 )
 
 // PortRange type of suricata rules
@@ -106,6 +109,59 @@ func (pr *PortRange) Compare(b_pr element.Element) bool {
 	}
 	return pr.value == s_pr.value
 }
+
+func (pr *PortRange) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool) {
+	trans_layer := pk.TransportLayer()
+	if trans_layer != nil {
+		return nil, false
+	}
+
+	p_t := pr.GetPorts()
+	pr_t := pr.GetRanges()
+
+	// check ports in port range
+	for _, p_i := range p_t {
+		layer, matched = p_i.Match(pk)
+		if !(!matched != pr.IsNegavite()) {		// XAND
+			return nil, false
+		}
+	}
+
+	for _, pr_i := range pr_t {
+		for _, pr_i_port := range pr_i {
+			layer, matched = pr_i_port.Match(pk)
+			if !(!matched != pr.IsNegavite()) {		// XAND
+				return nil, false
+			}
+		}
+	}
+
+	return layer, true
+}
+
+func (pr *PortRange) String() string {
+	s := "{"
+	s += fmt.Sprintf(", \"%s\": {", "Ports")
+	for i, l := 0, len(pr.GetPorts()); i < l; i++ {
+		s += pr.GetPorts()[i].String()
+		if i < l-1 {
+			s += ", "
+		}
+	}
+	s += "}"
+
+	s += fmt.Sprintf(", \"%s\": {", GetPortRangeType().GetName())
+	for i, l := 0, len(pr.GetRanges()); i < l; i++ {
+		s += fmt.Sprintf("{%s, %s}", pr.GetRanges()[i][0].String(), pr.GetRanges()[i][1].String())
+		if i < l-1 {
+			s += ", "
+		}
+	}
+	s += "}"
+	s += "}"
+	return s
+}
+
 // Sets negative value for PortRange (that means we have '! char with this one)
 func (pr *PortRange) Negative() {
 	pr.is_negative = true

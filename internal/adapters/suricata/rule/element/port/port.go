@@ -5,6 +5,7 @@ import (
 	"lee-netflow/internal/domain/rule/element"
 	"strings"
 
+	"github.com/google/gopacket"
 	"golang.org/x/exp/slices"
 )
 
@@ -143,6 +144,32 @@ func (p *Port) Compare(b_p element.Element) bool {
 		return false
 	}
 	return p.value == s_p.value
+}
+
+func (p *Port) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
+	trans_layer := pk.TransportLayer()
+	if trans_layer != nil {
+		return nil, false
+	}
+
+	src := trans_layer.TransportFlow().Src().String()
+	dst := trans_layer.TransportFlow().Dst().String()
+	if p.GetType() == GetSrcPortType() {
+		if (p.GetValue() == src) != p.IsNegavite() {	// contains address XOR negative (!a.value)
+			return trans_layer, true
+		}
+	}
+	if p.GetType() == GetDstPortType() {
+		if (p.GetValue() == dst) != p.IsNegavite() {	// contains address XOR negative (!a.value)
+			return trans_layer, true
+		}
+	}
+
+	return nil, false
+}
+
+func (p *Port) String() string {
+	return fmt.Sprintf("\"%s\": \"%s\"", p.GetType().GetName(), p.GetValue())
 }
 
 func (p *Port) Negative() {

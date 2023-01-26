@@ -3,6 +3,8 @@ package group
 import (
 	"lee-netflow/internal/domain/rule/element"
 	"strings"
+
+	"github.com/google/gopacket"
 )
 
 // Group type of suricata rules
@@ -93,6 +95,30 @@ func (g *Group) Compare(b_g element.Element) bool {
 	}
 	return g.value == s_g.value
 }
+// Returns last matched layer if matched group
+func (g *Group) Match(pk gopacket.Packet) (layer gopacket.Layer, matched  bool) {
+	for _, el := range g.GetElements() {
+		layer, matched = el.Match(pk)
+		if !(!matched != g.IsNegavite()) {		// !(!matched XOR g.is_negative) (!group) ---- XAND oparation
+			return nil, false
+		}
+	}
+
+	return layer, matched
+}
+
+func (g *Group) String() string {
+	s := "{"
+	for i, l := 0, len(g.GetElements()); i < l; i++ {
+		s += g.GetElements()[i].String()
+		if i < l-1 {
+			s += ", "
+		}
+	}
+	s += "}"
+	return s
+}
+
 // Sets negative value for group (that means we have '! char with this one)
 func (g *Group) Negative() {
 	g.is_negative = true
