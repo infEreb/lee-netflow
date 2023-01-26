@@ -24,19 +24,35 @@ func (ct *ConstantType) SetName(const_type_name string) {
 }
 
 func (ct *ConstantType) Compare(b_ct element.ElementType) bool {
-	s_ct, ok := b_ct.(*ConstantType)
-	if !ok {
-		return false
+	_, ok := b_ct.(*ConstantType)
+	if ok {
+		return true
 	}
-	return ct.name == s_ct.GetName()
+	s_cst, ok := b_ct.(*SrcConstantType)
+	if ok {
+		return ct.name == s_cst.GetName()
+	}
+	s_cdt, ok := b_ct.(*DstConstantType)
+	if ok {
+		return ct.name == s_cdt.GetName()
+	}
+	
+	return false
+}
+
+type SrcConstantType struct {
+	ConstantType
+}
+type DstConstantType struct {
+	ConstantType
 }
 
 // Constant rule element
 type Constant struct {
-	value      string
-	element	element.Element
+	value       string
+	element     element.Element
 	is_negative bool
-	const_type element.ElementType
+	const_type  element.ElementType
 }
 
 // Creates new Constant rule element
@@ -49,10 +65,10 @@ func New(value string, elem element.Element) *Constant {
 	}
 
 	return &Constant{
-		value:	value,
-		element: elem,
+		value:       value,
+		element:     elem,
 		is_negative: neg,
-		const_type: GetConstantType(),
+		const_type:  GetConstantType(),
 	}
 }
 
@@ -61,6 +77,29 @@ func GetConstantType() *ConstantType {
 	return &ConstantType{
 		name: "Constant",
 	}
+}
+func GetSrcConstantType() *SrcConstantType {
+	return &SrcConstantType{
+		ConstantType: ConstantType{
+			name: "SrcConstantType",
+		},
+	}
+}
+func GetDstConstantType() *DstConstantType {
+	return &DstConstantType{
+		ConstantType: ConstantType{
+			name: "DstConstantType",
+		},
+	}
+}
+
+func (c *Constant) SetSrcType() {
+	c.const_type = GetSrcConstantType()
+	c.element.SetSrcType()
+}
+func (c *Constant) SetDstType() {
+	c.const_type = GetDstConstantType()
+	c.element.SetDstType()
 }
 
 func (c *Constant) GetValue() string {
@@ -85,7 +124,7 @@ func (c *Constant) GetType() element.ElementType {
 
 func (c *Constant) SetType(const_type element.ElementType) {
 	c.const_type = const_type
-} 
+}
 
 func (c *Constant) Compare(b_c element.Element) bool {
 	s_c, ok := b_c.(*Constant)
@@ -97,18 +136,24 @@ func (c *Constant) Compare(b_c element.Element) bool {
 
 func (c *Constant) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool) {
 	layer, matched = c.element.Match(pk)
-	if matched != c.IsNegavite() {		// XOR
+	if matched != c.IsNegavite() { // XOR
 		return layer, matched
 	}
 
 	return nil, false
 }
 
-func (c *Constant) String() string {
-	return fmt.Sprintf("\"%s\": %s", c.GetValue(), c.GetElement().String())
+func (c *Constant) Clone() element.Element {
+	el := *c
+	el.SetElement(c.element.Clone())
+	return &el
 }
 
-// Sets negative value for address (that means we have '! char with this one)
+func (c *Constant) String() string {
+	return fmt.Sprintf("{\"%s\": %s}", c.GetValue(), c.GetElement().String())
+}
+
+// Sets negative value for Constant (that means we have '! char with this one)
 func (c *Constant) Negative() {
 	c.is_negative = true
 }

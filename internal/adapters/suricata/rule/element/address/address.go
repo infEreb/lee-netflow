@@ -37,14 +37,20 @@ func (at *AddressType) SetName(addr_type_name string) {
 }
 
 func (at *AddressType) Compare(b_at element.ElementType) bool {
-	s_at, ok := b_at.(*AddressType)
-	if !ok {
-		return false
-	}
-	if s_at.GetName() == GetAddressType().GetName() || at.GetName() == GetAddressType().GetName() {
+	_, ok := b_at.(*AddressType)
+	if ok {
 		return true
 	}
-	return at.name == s_at.GetName()
+	s_ast, ok := b_at.(*SrcAddressType)
+	if ok {
+		return at.name == s_ast.GetName()
+	}
+	s_adt, ok := b_at.(*DstAddressType)
+	if ok {
+		return at.name == s_adt.GetName()
+	}
+	
+	return false
 }
 
 // Type for source address AddressType of rule
@@ -86,7 +92,6 @@ func GetAddressType() *AddressType {
 		name: "Address",
 	}
 }
-
 // Returns new object of SrcAddressType type
 func GetSrcAddressType() *SrcAddressType {
 	return &SrcAddressType{
@@ -95,7 +100,6 @@ func GetSrcAddressType() *SrcAddressType {
 		},
 	}
 }
-
 // Returns new object of DstAddressType type
 func GetDstAddressType() *DstAddressType {
 	return &DstAddressType{
@@ -103,6 +107,13 @@ func GetDstAddressType() *DstAddressType {
 			name: "DstAddress",
 		},
 	}
+}
+
+func (a *Address) SetSrcType() {
+	a.addr_type = GetSrcAddressType()
+}
+func (a *Address) SetDstType() {
+	a.addr_type = GetDstAddressType()
 }
 
 func (a *Address) GetValue() string {
@@ -131,7 +142,7 @@ func (a *Address) Compare(b_a element.Element) bool {
 
 func (a *Address) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 	ipv4_layer := pk.Layer(layers.LayerTypeIPv4)
-	if ipv4_layer != nil {
+	if ipv4_layer == nil {
 		return nil, false
 	}
 	ipv4 := ipv4_layer.(*layers.IPv4)
@@ -154,8 +165,13 @@ func (a *Address) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 	return nil, false
 }
 
+func (a *Address) Clone() element.Element {
+	el := *a
+	return &el
+}
+
 func (a *Address) String() string {
-	return fmt.Sprintf("\"%s\": \"%s\"", a.GetType().GetName(), a.GetValue())
+	return fmt.Sprintf("{\"%s\": \"%s\"}", a.GetType().GetName(), a.GetValue())
 }
 
 // Sets negative value for address (that means we have '! char with this one)

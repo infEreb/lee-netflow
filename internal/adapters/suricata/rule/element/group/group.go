@@ -23,11 +23,27 @@ func (gt *GroupType) SetName(group_type_name string) {
 }
 
 func (gt *GroupType) Compare(b_gt element.ElementType) bool {
-	s_gt, ok := b_gt.(*GroupType)
-	if !ok {
-		return false
+	_, ok := b_gt.(*GroupType)
+	if ok {
+		return true
 	}
-	return gt.name == s_gt.GetName()
+	s_gst, ok := b_gt.(*SrcGroupType)
+	if ok {
+		return gt.name == s_gst.GetName()
+	}
+	s_gdt, ok := b_gt.(*DstGroupType)
+	if ok {
+		return gt.name == s_gdt.GetName()
+	}
+	
+	return false
+}
+
+type SrcGroupType struct {
+	GroupType
+}
+type DstGroupType struct {
+	GroupType
 }
 
 // Group rule element
@@ -59,6 +75,33 @@ func New(value string) *Group {
 func GetGroupType() *GroupType {
 	return &GroupType{
 		name: "Group",
+	}
+}
+func GetSrcGroupType() *SrcGroupType {
+	return &SrcGroupType{
+		GroupType: GroupType{
+			name: "SrcGroupType",
+		},
+	}
+}
+func GetDstGroupType() *DstGroupType {
+	return &DstGroupType{
+		GroupType: GroupType{
+			name: "DstGroupType",
+		},
+	}
+}
+
+func (g *Group) SetSrcType() {
+	g.group_type = GetSrcGroupType()
+	for _, el := range g.elements {
+		el.SetSrcType()
+	}
+}
+func (g *Group) SetDstType() {
+	g.group_type = GetDstGroupType()
+	for _, el := range g.elements {
+		el.SetDstType()
 	}
 }
 
@@ -117,6 +160,16 @@ func (g *Group) String() string {
 	}
 	s += "}"
 	return s
+}
+
+func (g *Group) Clone() element.Element {
+	el := *g
+	cp_g_els := []element.Element{}
+	for _, gel := range g.elements {
+		cp_g_els = append(cp_g_els, gel.Clone())
+	}
+	el.SetElements(cp_g_els)
+	return &el
 }
 
 // Sets negative value for group (that means we have '! char with this one)

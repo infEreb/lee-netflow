@@ -59,6 +59,9 @@ func GetDirectionType() *DirectionType {
 	}
 }
 
+func (d *Direction) SetSrcType() {}
+func (d *Direction) SetDstType() {}
+
 func (d *Direction) GetValue() string {
 	return d.value
 }
@@ -87,6 +90,11 @@ func (d *Direction) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 	return nil, true
 }
 
+func (d *Direction) Clone() element.Element {
+	el := *d
+	return &el
+}
+
 func (d *Direction) String() string {
-	return fmt.Sprintf("\"%s\": \"%s\"", d.GetType().GetName(), d.GetValue())
+	return fmt.Sprintf("{\"%s\": \"%s\"}", d.GetType().GetName(), d.GetValue())
 }

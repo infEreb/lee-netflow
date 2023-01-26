@@ -59,6 +59,9 @@ func GetProtocolType() *ProtocolType {
 	}
 }
 
+func (p *Protocol) SetSrcType() {}
+func (p *Protocol) SetDstType() {}
+
 func (p *Protocol) GetValue() string {
 	return p.value
 }
@@ -113,6 +116,11 @@ func (p *Protocol) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool
 	return layer, true
 }
 
+func (p *Protocol) Clone() element.Element {
+	el := *p
+	return &el
+}
+
 func (p *Protocol) String() string {
-	return fmt.Sprintf("\"%s\": \"%s\"", p.GetType().GetName(), p.GetValue()) 
+	return fmt.Sprintf("{\"%s\": \"%s\"}", p.GetType().GetName(), p.GetValue()) 
 }

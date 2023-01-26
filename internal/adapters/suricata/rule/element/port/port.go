@@ -33,14 +33,20 @@ func (pt *PortType) SetName(port_type_name string) {
 }
 
 func (pt *PortType) Compare(b_pt element.ElementType) bool {
-	s_pt, ok := b_pt.(*PortType)
-	if !ok {
-		return false
-	}
-	if s_pt.GetName() == GetPortType().GetName() || pt.GetName() == GetPortType().GetName() {
+	_, ok := b_pt.(*PortType)
+	if ok {
 		return true
 	}
-	return pt.name == s_pt.GetName()
+	s_pst, ok := b_pt.(*SrcPortType)
+	if ok {
+		return pt.name == s_pst.GetName()
+	}
+	s_pdt, ok := b_pt.(*DstPortType)
+	if ok {
+		return pt.name == s_pdt.GetName()
+	}
+	
+	return false
 }
 
 type SrcPortType struct {
@@ -90,6 +96,13 @@ func GetDstPortType() *DstPortType {
 			name: "DstPort",
 		},
 	}
+}
+
+func (p *Port) SetSrcType() {
+	p.port_type = GetSrcPortType()
+}
+func (p *Port) SetDstType() {
+	p.port_type = GetDstPortType()
 }
 
 func DelValid(const_name string) error {
@@ -155,12 +168,12 @@ func (p *Port) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 	src := trans_layer.TransportFlow().Src().String()
 	dst := trans_layer.TransportFlow().Dst().String()
 	if p.GetType() == GetSrcPortType() {
-		if (p.GetValue() == src) != p.IsNegavite() {	// contains address XOR negative (!a.value)
+		if (p.GetValue() == src) != p.IsNegavite() {	// contains Port XOR negative (!a.value)
 			return trans_layer, true
 		}
 	}
 	if p.GetType() == GetDstPortType() {
-		if (p.GetValue() == dst) != p.IsNegavite() {	// contains address XOR negative (!a.value)
+		if (p.GetValue() == dst) != p.IsNegavite() {	// contains Port XOR negative (!a.value)
 			return trans_layer, true
 		}
 	}
@@ -168,8 +181,13 @@ func (p *Port) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 	return nil, false
 }
 
+func (p *Port) Clone() element.Element {
+	el := *p
+	return &el
+}
+
 func (p *Port) String() string {
-	return fmt.Sprintf("\"%s\": \"%s\"", p.GetType().GetName(), p.GetValue())
+	return fmt.Sprintf("{\"%s\": \"%s\"}", p.GetType().GetName(), p.GetValue())
 }
 
 func (p *Port) Negative() {

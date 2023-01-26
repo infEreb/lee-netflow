@@ -55,6 +55,9 @@ func GetOptionType() *OptionType {
 	}
 }
 
+func (o *Option) SetSrcType() {}
+func (o *Option) SetDstType() {}
+
 func (o *Option) GetValue() string {
 	return o.value
 }
@@ -76,11 +79,16 @@ func (o *Option) Compare(b_o element.Element) bool {
 	return o.value == s_o.value 
 }
 
+func (o *Option) Clone() element.Element {
+	el := *o
+	return &el
+}
+
 func (o *Option) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 	return nil, true
 }
 
 func (o *Option) String() string {
-	return fmt.Sprintf("\"%s\": \"%s\"", o.GetType().GetName(), o.GetValue())
+	return fmt.Sprintf("{\"%s\": \"%s\"}", o.GetType().GetName(), o.GetValue())
 }
 

@@ -63,6 +63,9 @@ func GetActionType() *ActionType {
 	} 
 }
 
+func (a *Action) SetSrcType() {}
+func (a *Action) SetDstType() {}
+
 func (a *Action) GetValue() string {
 	return a.value
 }
@@ -91,6 +94,11 @@ func (a *Action) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
 	return nil, true
 }
 
+func (a *Action) Clone() element.Element {
+	el := *a
+	return &el
+}
+
 func (a *Action) String() string {
-	return fmt.Sprintf("\"%s\": \"%s\"", a.GetType().GetName(), a.GetValue())
+	return fmt.Sprintf("{\"%s\": \"%s\"}", a.GetType().GetName(), a.GetValue())
 }
