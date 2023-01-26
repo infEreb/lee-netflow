@@ -10,6 +10,10 @@ import (
 	"lee-netflow/internal/domain/system"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/pcap"
 )
 
 var (
@@ -46,7 +50,7 @@ func conf_flags() error {
 }
 
 func main() {
-	var system system.RuleFormatSystem = suricata.New()
+	var system system.SystemRuleFormat = suricata.New()
 
 	// flags
 	if err := conf_flags(); err != nil {
@@ -109,6 +113,54 @@ func main() {
 		rules = append(rules, ans.Rule)
 	}
 
+
+	// Find all devices
+    // devices, err := pcap.FindAllDevs()
+    // if err != nil {
+    //     fmt.Printf(err.Error())
+    // }
+
+    // Print device information
+	// needed_device := ""
+    // fmt.Println("Devices found:")
+	// iface, err := net.InterfaceByName(system.GetCaptureInfo().Ifaces[0])
+	// if err != nil {
+	// 	system.ErrorLog(err.Error())
+	// }
+    // for _, device := range devices {
+	// 	fmt.Println("\nName: ", device.Name)
+    //     fmt.Println("Description: ", device.Description)
+    //     fmt.Println("Devices addresses: ", device.Description)
+    //     for _, address := range device.Addresses {
+	// 		if_addr, _ := iface.Addrs()
+	// 		if net.
+    //         fmt.Println("- IP address: ", address.IP)
+    //     }
+    // }
+	
+
+
+	handler, err := pcap.OpenLive("\\Device\\NPF_{7BA3413C-D2A3-48B3-8D5C-7C13DB65CCEB}", system.GetCaptureInfo().Snaplen, system.GetCaptureInfo().Promisc, time.Duration(system.GetCaptureInfo().Timeout))
+	if err != nil {
+		system.ErrorLog(fmt.Sprintf("Error open capture device %s: %s", system.GetCaptureInfo().Ifaces[0], err.Error()))
+		return
+	}
+	pk_source := gopacket.NewPacketSource(handler, handler.LinkType())
+	for pk := range pk_source.Packets() {
+		for _, rule := range rules {
+			matched, err := system.GetMatcher().Match(pk, rule)
+			if err != nil {
+				system.ErrorLog(fmt.Sprintf("Rule (%s: %s) match error: %s", rule.GetName(), rule.GetText(), err))
+			}
+			if matched {
+				system.InfoLog(fmt.Sprintf("Rule (%s: %s) has been matched with packet %s", rule.GetName(), rule.GetText(), pk.String()))
+			}
+			if !matched {
+				system.DebugLog(fmt.Sprintf("Rule (%s: %s) hasnt been matched with packet %s", rule.GetName(), rule.GetText(), pk.String()))
+			}
+		}
+	}
+
 	// rule_text := string(rule_bytes)
 	// rule_path_parts := strings.Split(TEST_RULE_FLAG, "/")
 	// rule_name := rule_path_parts[len(rule_path_parts)-1]
@@ -121,10 +173,10 @@ func main() {
 	// 	system.DebugLog(fmt.Sprintf("Rule comment parsed: %s", err))
 	// 	return
 	// }
-	for _, r := range rules {
-		system.InfoLog(fmt.Sprintf("Rule %s has been parsed", r.GetName()))
-		fmt.Println(r)
-	}
+	// for _, r := range rules {
+	// 	system.InfoLog(fmt.Sprintf("Rule %s has been parsed", r.GetName()))
+	// 	fmt.Println(r)
+	// }
 
 	
 
