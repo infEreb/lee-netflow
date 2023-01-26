@@ -30,7 +30,7 @@ func New() (val *SuricataValidator) {
 		constants.ProtocolType.GetName(): {
 			protocol.New("ip"),
 			protocol.New("tcp"),
-			protocol.New("http"),
+			protocol.New("udp"),
 		},
 		constants.ConstantType.GetName(): {
 			constant.New("any", protocol.New("any")),
