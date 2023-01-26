@@ -53,9 +53,8 @@ var (
 const (
 	RE_CONSTANT = `^(!?\$[A-Z,_]+)$`
 	RE_KEYWORD = `^any$`
-	RE_GROUP = `^!?\[.*?(,\s?.*?){1,}\]$`
-	RE_PORT_RANGE_NEW = `^!?(\d{1,5}:\d{0,5}|\d{0,5}:\d{1,5})$`
-	RE_PORT_RANGE = `^!?(\[(!?\d{1,5}|!?(\d{0,5}:\s?\d{1,5}|\d{1,5}:\s?\d{0,5}))(,\s?((!?\d{1,5})|(!?(\d{0,5}:\s?\d{1,5}|\d{1,5}:\s?\d{0,5}))))?\]|(\d{0,5}:\d{1,5}|\d{1,5}:\d{0,5}))$`
+	RE_GROUP = `^!?\[.*?(,\s?.*?){0,}\]$`
+	RE_PORT_RANGE = `^!?(\d{1,5}:\d{0,5}|\d{0,5}:\d{1,5})$`
 	RE_PORT = `^!?\d{1,5}$`
 	RE_IPV4 = `^!?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(/\d{1,2})?`
 
@@ -79,7 +78,7 @@ func IsGroup(group_str string) bool {
 }
 
 func IsPortRange(range_str string) bool {
-	matched, _ := regexp.MatchString(RE_PORT_RANGE_NEW, range_str)
+	matched, _ := regexp.MatchString(RE_PORT_RANGE, range_str)
 	return matched
 }
 
