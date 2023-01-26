@@ -14,6 +14,7 @@ import (
 	"lee-netflow/internal/domain/rule/matcher"
 	"lee-netflow/internal/domain/rule/parser"
 	"lee-netflow/internal/domain/rule/validator"
+	"lee-netflow/internal/domain/system"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,10 +29,11 @@ const (
 )
 
 type SuricataConfig struct {
-	Addresses   map[string]string `json:"addresses"`
-	Ports       map[string]string `json:"ports"`
-	LogsDirPath string            `json:"logs_dir_path"`
-	LogLevel    string            `json:"log_level"`
+	Addresses   map[string]string  `json:"addresses"`
+	Ports       map[string]string  `json:"ports"`
+	LogsDirPath string             `json:"logs_dir_path"`
+	LogLevel    string             `json:"log_level"`
+	CaptureInfo system.CaptureInfo `json:"capture"`
 }
 
 type Suricata struct {
@@ -43,6 +45,8 @@ type Suricata struct {
 	log_file_path string
 	log_level     string
 	logs          *loggers
+
+	capture_info *system.CaptureInfo
 }
 
 type loggers struct {
@@ -111,6 +115,7 @@ func (s *Suricata) Configure(config_path string) error {
 		return err
 	}
 
+	// logs configure
 	if conf_json.LogsDirPath == "" {
 		ex, err := os.Executable()
 		if err != nil {
@@ -125,8 +130,15 @@ func (s *Suricata) Configure(config_path string) error {
 		return err
 	}
 
+	// configure capture info for system
+	if &conf_json.CaptureInfo == nil {
+		return s.ErrorLog("Some troubles with parsing 'capture' field.")
+	}
+	s.capture_info = &conf_json.CaptureInfo
+
+	// check addresses and ports fields
 	if conf_json.Addresses == nil || conf_json.Ports == nil {
-		return fmt.Errorf("Some troubles with parsing 'addresses' or 'ports' fields.")
+		return s.ErrorLog("Some troubles with parsing 'capture' field.")
 	}
 
 	for key, value := range conf_json.Addresses {
@@ -147,7 +159,7 @@ func (s *Suricata) Configure(config_path string) error {
 			if err != nil {
 				return err
 			}
-			key_const.SetElement(avl_const_el)
+			key_const.GetElement().(*constant.Constant).SetElement(avl_const_el.(*constant.Constant).GetElement())
 			if err = s.validator.AddValid(key_const); err != nil {
 				return err
 			}
@@ -249,6 +261,10 @@ func (s *Suricata) Configure(config_path string) error {
 	}
 
 	return nil
+}
+
+func (s *Suricata) GetCaptureInfo() *system.CaptureInfo {
+	return s.capture_info
 }
 
 func (s *Suricata) Run() error {
