@@ -125,7 +125,7 @@ func (k *Keyword) Compare(b_k element.Element) bool {
 func (k *Keyword) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool) {
 	switch k.GetValue() {
 		case "any": {
-			return pk.NetworkLayer(), true
+			return pk.NetworkLayer(), !k.is_negative
 		}
 		default: {
 			return nil, false
