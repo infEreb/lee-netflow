@@ -2,4 +2,4 @@
 # Author ...
 
 # Rule explanation
-# alert tcp $PRIVATE_NET any -> $EXTERNAL_NET any (;)
+alert ip $PRIVATE_NET any -> 8.8.8.8 any (;)

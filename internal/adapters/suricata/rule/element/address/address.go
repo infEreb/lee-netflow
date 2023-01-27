@@ -1,12 +1,13 @@
 package address
 
 import (
+	"fmt"
 	"lee-netflow/internal/domain/rule/element"
-	"regexp"
-	"strconv"
+	"net"
 	"strings"
 
-	"golang.org/x/exp/slices"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 var (
@@ -36,14 +37,20 @@ func (at *AddressType) SetName(addr_type_name string) {
 }
 
 func (at *AddressType) Compare(b_at element.ElementType) bool {
-	s_at, ok := b_at.(*AddressType)
-	if !ok {
-		return false
-	}
-	if s_at.GetName() == GetAddressType().GetName() || at.GetName() == GetAddressType().GetName() {
+	_, ok := b_at.(*AddressType)
+	if ok {
 		return true
 	}
-	return at.name == s_at.GetName()
+	s_ast, ok := b_at.(*SrcAddressType)
+	if ok {
+		return at.name == s_ast.GetName()
+	}
+	s_adt, ok := b_at.(*DstAddressType)
+	if ok {
+		return at.name == s_adt.GetName()
+	}
+	
+	return false
 }
 
 // Type for source address AddressType of rule
@@ -85,7 +92,6 @@ func GetAddressType() *AddressType {
 		name: "Address",
 	}
 }
-
 // Returns new object of SrcAddressType type
 func GetSrcAddressType() *SrcAddressType {
 	return &SrcAddressType{
@@ -94,7 +100,6 @@ func GetSrcAddressType() *SrcAddressType {
 		},
 	}
 }
-
 // Returns new object of DstAddressType type
 func GetDstAddressType() *DstAddressType {
 	return &DstAddressType{
@@ -102,6 +107,13 @@ func GetDstAddressType() *DstAddressType {
 			name: "DstAddress",
 		},
 	}
+}
+
+func (a *Address) SetSrcType() {
+	a.addr_type = GetSrcAddressType()
+}
+func (a *Address) SetDstType() {
+	a.addr_type = GetDstAddressType()
 }
 
 func (a *Address) GetValue() string {
@@ -128,6 +140,44 @@ func (a *Address) Compare(b_a element.Element) bool {
 	return a.value == s_a.value
 }
 
+func (a *Address) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
+	ipv4_layer := pk.Layer(layers.LayerTypeIPv4)
+	if ipv4_layer == nil {
+		return nil, false
+	}
+	ipv4 := ipv4_layer.(*layers.IPv4)
+	if !strings.Contains(a.GetValue(), "/") {
+		a.SetValue(a.GetValue() + "/32")
+	}
+	
+	_, net_cidr, err := net.ParseCIDR(a.GetValue())
+	if err != nil {
+		return nil, false
+	}
+
+	if a.GetType().Compare(GetSrcAddressType()) {
+		if net_cidr.Contains(ipv4.SrcIP) != a.IsNegavite() {	// contains address XOR negative (!a.value)
+			return ipv4, true
+		}
+	}
+	if a.GetType().Compare(GetDstAddressType()) {
+		if net_cidr.Contains(ipv4.DstIP) != a.IsNegavite() {	// contains address XOR negative (!a.value)
+			return ipv4, true
+		}
+	}
+
+	return nil, false
+}
+
+func (a *Address) Clone() element.Element {
+	el := *a
+	return &el
+}
+
+func (a *Address) String() string {
+	return fmt.Sprintf("{\"%s\": \"%s\"}", a.GetType().GetName(), a.GetValue())
+}
+
 // Sets negative value for address (that means we have '! char with this one)
 func (a *Address) Negative() {
 	a.is_negative = true
@@ -136,103 +186,3 @@ func (a *Address) IsNegavite() bool {
 	return a.is_negative
 }
 
-func IsConstant(addr_const string) bool {
-	addr_re, _ := regexp.MatchString(`!?\$[A-Z,_]+|any`, addr_const)
-	return addr_re
-}
-func IsAddressIPv4(addr_str string) bool {
-	addr_check := func(addr_str string) bool {
-		addr_str = strings.TrimPrefix(addr_str, "!")
-		octs := strings.Split(addr_str, ".")
-
-		if len(octs) != 4 {
-			return false
-		}
-
-		for _, oct := range octs {
-			n, err := strconv.Atoi(oct)
-			if err != nil {
-				return false
-			}
-
-			if n < 0 || n > 255 {
-				return false
-			}
-		}
-		return true
-	}
-
-	addr_prefix := strings.Split(addr_str, "/")
-
-	if len(addr_prefix) == 1 {
-		return addr_check(addr_prefix[0])
-	}
-
-	if len(addr_prefix) == 2 {
-		prefix_n, err := strconv.Atoi(addr_prefix[1])
-		if err != nil {
-			return false
-		}
-		if prefix_n < 0 || prefix_n > 32 {
-			return false
-		}
-		return addr_check(addr_prefix[0])
-	}
-
-	return false
-}
-func IsGroup(addr_group string) bool {
-	addr_re, _ := regexp.MatchString(`^!?\[.*?\]`, addr_group)
-	return addr_re
-}
-func CheckValidElem(addr_elem string) bool {
-	if IsConstant(addr_elem) {
-		const_str := strings.TrimPrefix(addr_elem, "!")
-		if _, has := validAddressesConstants[const_str]; has {
-			return true
-		}
-		return false
-	}
-	if IsAddressIPv4(addr_elem) {
-		return true
-	}
-	if IsGroup(addr_elem) {
-		group_str := strings.TrimPrefix(addr_elem, "!")
-		group_str = strings.TrimPrefix(group_str, "[")
-		group_str = strings.TrimSuffix(group_str, "]")
-		group_elems := strings.Split(strings.Replace(group_str, " ", "", -1), ",")
-		for _, elem := range group_elems {
-			if !CheckValidElem(elem) {
-				return false
-			}
-		}
-		return true
-	}
-	// cannot be other type
-	return false
-}
-
-func CheckAvailableElem(addr_elem string) bool {
-	if IsConstant(addr_elem) {
-		const_str := strings.TrimPrefix(addr_elem, "!")
-		if slices.Contains(availableAddressesConstants, const_str) {
-			return true
-		}
-		return false
-	}
-	if IsAddressIPv4(addr_elem) {
-		return true
-	}
-	if IsGroup(addr_elem) {
-		group_str := strings.Trim(addr_elem, "[]")
-		group_elems := strings.Split(strings.Replace(group_str, " ", "", -1), ",")
-		for _, elem := range group_elems {
-			if !CheckAvailableElem(elem) {
-				return false
-			}
-		}
-		return true
-	}
-	// cannot be other type
-	return true
-}

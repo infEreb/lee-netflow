@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"lee-netflow/internal/domain/rule/element"
 
-	"golang.org/x/exp/slices"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 var (
@@ -58,64 +59,9 @@ func GetProtocolType() *ProtocolType {
 	}
 }
 
-func (p *Protocol) IsValid() bool {
-	return slices.Contains(availableProtocols, p.value)
-}
-func AddValid(value string, _ []string) error {
-	if slices.Contains(validProtocols, value) {
-		return fmt.Errorf("Protocol %s already is valid", value)
-	}
-	validProtocols = append(validProtocols, value)
-	return nil
-}
-func DelValid(value string) error {
-	if !slices.Contains(validProtocols, value) {
-		return fmt.Errorf("Protocol %s isnt exists as an valid protocol", value)
-	}
+func (p *Protocol) SetSrcType() {}
+func (p *Protocol) SetDstType() {}
 
-	del_idx := 0
-	for i, v_proto := range validProtocols {
-		if v_proto == value {
-			del_idx = i
-			break
-		}
-	}
-
-	last_dir := validProtocols[len(validProtocols) - 1]
-	validProtocols[del_idx] = last_dir
-	validProtocols = validProtocols[:len(validProtocols) - 1]
-
-	return nil
-}
-func (d *Protocol) IsAvailable() bool {
-	return slices.Contains(availableProtocols, d.value)
-}
-func AddAvailable(value string) error {
-	if slices.Contains(availableProtocols, value) {
-		return fmt.Errorf("Protocol %s already available", value)
-	}
-	availableProtocols = append(availableProtocols, value)
-	return nil
-}
-func DelAvailable(value string) error {
-	if !slices.Contains(availableProtocols, value) {
-		return fmt.Errorf("Protocol %s isnt exists as an available protocol", value)
-	}
-
-	del_idx := 0
-	for i, a_proto := range availableProtocols {
-		if a_proto == value {
-			del_idx = i
-			break
-		}
-	}
-
-	last_dir := availableProtocols[len(availableProtocols) - 1]
-	availableProtocols[del_idx] = last_dir
-	availableProtocols = availableProtocols[:len(availableProtocols) - 1]
-
-	return nil
-}
 func (p *Protocol) GetValue() string {
 	return p.value
 }
@@ -135,4 +81,54 @@ func (p *Protocol) Compare(b_p element.Element) bool {
 		return false
 	}
 	return p.value == s_p.value 
+}
+
+func (p *Protocol) Match(pk gopacket.Packet) (layer gopacket.Layer, matched bool) {
+	switch p.GetValue() {
+		case "ip": {
+			ipv4_layer := pk.Layer(layers.LayerTypeIPv4)
+			if ipv4_layer == nil {
+				return nil, false
+			}
+			layer = ipv4_layer
+			break
+		}
+		case "tcp": {
+			tcp_layer := pk.Layer(layers.LayerTypeTCP)
+			if tcp_layer == nil {
+				return nil, false
+			}
+			layer = tcp_layer
+			break
+		}
+		case "udp": {
+			udp_layer := pk.Layer(layers.LayerTypeUDP)
+			if udp_layer == nil {
+				return nil, false
+			}
+			layer = udp_layer
+			break
+		}
+		case "icmp": {
+			icmp_layer := pk.Layer(layers.LayerTypeICMPv4)
+			if icmp_layer == nil {
+				return nil, false
+			}
+			layer = icmp_layer
+			break
+		}
+		default: {
+			return nil, false
+		}
+	}
+	return layer, true
+}
+
+func (p *Protocol) Clone() element.Element {
+	el := *p
+	return &el
+}
+
+func (p *Protocol) String() string {
+	return fmt.Sprintf("{\"%s\": \"%s\"}", p.GetType().GetName(), p.GetValue()) 
 }

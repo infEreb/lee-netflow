@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"fmt"
 	"lee-netflow/internal/domain/rule"
 
 	"github.com/google/gopacket"
@@ -14,11 +13,15 @@ func New() *SuricataMatcher {
 	return &SuricataMatcher{}
 }
 
-func (sm *SuricataMatcher) Match(packet gopacket.Packet, rule *rule.Rule) (_ bool, err error) {
-	pack_proto_l3 := packet.NetworkLayer().LayerType().String()
-	pack_proto_l4 := packet.TransportLayer().LayerType().String()
-
-	fmt.Println(pack_proto_l3, pack_proto_l4)
+func (sm *SuricataMatcher) Match(pk gopacket.Packet, rule *rule.Rule) (matched bool, err error) {
+	for _, els := range rule.GetAllElements() {
+		for _, el := range els {
+			_, matched := el.Match(pk)
+			if !matched {
+				return false, nil// fmt.Errorf("Element %s dont matched for packet %s", el.String(), pk.String())
+			}
+		}
+	}
 
 	return true, nil
 }

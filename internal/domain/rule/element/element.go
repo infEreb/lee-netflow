@@ -1,5 +1,7 @@
 package element
 
+import "github.com/google/gopacket"
+
 // Interface for element type for rule elements
 type ElementType interface {
 	GetName() string
@@ -17,4 +19,14 @@ type Element interface {
 	SetType(ElementType)
 	// Returns true if two elements and elements types are equal 
 	Compare(Element) bool
+	// Matches packet with this element
+	// Returns layer with data that has been matched and result of match 
+	Match(gopacket.Packet) (gopacket.Layer, bool)
+
+	SetSrcType()
+	SetDstType()
+
+	Clone() Element
+
+	String() string
 }

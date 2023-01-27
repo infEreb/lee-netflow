@@ -11,6 +11,7 @@ type Validator interface {
 	// Validate all rule elements
 	// Returns nil or error with error element information
 	Validate(map[string][]element.Element) error
+	GetBaseValidator() *BaseValidator
 	// // Returns nil or error with error element information
 	// Available(map[element.ElementType][]element.Element) error
 	// // Validate element of element type only
@@ -130,6 +131,14 @@ func (bv *BaseValidator) GetValidByElement(elem element.Element) (element.Elemen
 	// return yourself and error
 	return elem, fmt.Errorf("Has not valid element")
 }
+func (bv *BaseValidator) GetValidByType(el_type element.ElementType) ([]element.Element, error) {
+	elems, has := bv.validElements[el_type.GetName()]
+	if !has {
+		return nil, fmt.Errorf("Has not valid elements with %s type", el_type.GetName())
+	}
+
+	return elems, nil
+}
 
 func (bv *BaseValidator) GetAvailable() map[string][]element.Element {
 	return bv.availableElements
@@ -145,6 +154,14 @@ func (bv *BaseValidator) GetAvailableByElement(elem element.Element) (element.El
 	}
 	// return yourself and error
 	return elem, fmt.Errorf("Has not available element")
+}
+func (bv *BaseValidator) GetAvailableByType(el_type element.ElementType) ([]element.Element, error) {
+	elems, has := bv.availableElements[el_type.GetName()]
+	if !has {
+		return nil, fmt.Errorf("Has not available elements with %s type", el_type.GetName())
+	}
+
+	return elems, nil
 }
 
 func (bv *BaseValidator) AddValid(element element.Element) error {

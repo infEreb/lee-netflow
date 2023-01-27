@@ -14,6 +14,7 @@ import (
 	"lee-netflow/internal/domain/rule/matcher"
 	"lee-netflow/internal/domain/rule/parser"
 	"lee-netflow/internal/domain/rule/validator"
+	"lee-netflow/internal/domain/system"
 	"log"
 	"os"
 	"path/filepath"
@@ -21,32 +22,51 @@ import (
 	"time"
 )
 
+const (
+	LOG_DEBUG_LVL = "DEBUG"
+	LOG_INFO_LVL  = "INFO"
+	LOG_ERROR_LVL = "ERROR"
+)
+
 type SuricataConfig struct {
-	Addresses map[string]string `json:"addresses"`
-	Ports map[string]string `json:"ports"`
-	LogsDirPath string `json:"logs_dir_path"`
+	Addresses   map[string]string  `json:"addresses"`
+	Ports       map[string]string  `json:"ports"`
+	LogsDirPath string             `json:"logs_dir_path"`
+	LogLevel    string             `json:"log_level"`
+	CaptureInfo system.CaptureInfo `json:"capture"`
 }
 
 type Suricata struct {
-	parser *suricata_parser.SuricataParser
+	parser    *suricata_parser.SuricataParser
 	validator *suricata_validator.SuricataValidator
-	matcher *suricata_matcher.SuricataMatcher
+	matcher   *suricata_matcher.SuricataMatcher
 
 	logs_dir_path string
 	log_file_path string
-	logs *loggers
+	log_level     string
+	logs          *loggers
+
+	capture_info *system.CaptureInfo
 }
 
 type loggers struct {
 	debug *log.Logger
-	info *log.Logger
-	err *log.Logger
+	info  *log.Logger
+	err   *log.Logger
 }
 
-func (s *Suricata) loggersConfig() (*loggers, error) {
-	if _, err:= os.Stat(s.logs_dir_path); os.IsNotExist(err) {
+func (s *Suricata) loggersConfig(log_level string) (*loggers, error) {
+
+	if _, err := os.Stat(s.logs_dir_path); os.IsNotExist(err) {
 		return nil, fmt.Errorf("Directory <%s> doesnt exists", s.logs_dir_path)
 	}
+
+	if log_level != LOG_DEBUG_LVL && log_level != LOG_INFO_LVL && log_level != LOG_ERROR_LVL {
+		if log_level != "" {
+			return nil, fmt.Errorf("Unexpected log level %s", log_level)
+		}
+	}
+	s.log_level = log_level
 
 	s.log_file_path = s.logs_dir_path + "/full-" + strings.Split(time.Now().String(), " ")[0] + ".log"
 	f_log, err := os.OpenFile(s.log_file_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -65,8 +85,8 @@ func (s *Suricata) loggersConfig() (*loggers, error) {
 func New() *Suricata {
 
 	return &Suricata{
-		parser: suricata_parser.New(),
-		matcher: suricata_matcher.New(),
+		parser:    suricata_parser.New(),
+		matcher:   suricata_matcher.New(),
 		validator: suricata_validator.New(),
 	}
 }
@@ -95,22 +115,30 @@ func (s *Suricata) Configure(config_path string) error {
 		return err
 	}
 
+	// logs configure
 	if conf_json.LogsDirPath == "" {
 		ex, err := os.Executable()
-    	if err != nil {
-        	return err
-    	}
-    	ex_path := filepath.Dir(ex)
+		if err != nil {
+			return err
+		}
+		ex_path := filepath.Dir(ex)
 		s.logs_dir_path = ex_path
 	}
 	s.logs_dir_path = conf_json.LogsDirPath
-	s.logs, err = s.loggersConfig()
+	s.logs, err = s.loggersConfig(conf_json.LogLevel)
 	if err != nil {
 		return err
 	}
 
+	// configure capture info for system
+	if &conf_json.CaptureInfo == nil {
+		return s.ErrorLog("Some troubles with parsing 'capture' field.")
+	}
+	s.capture_info = &conf_json.CaptureInfo
+
+	// check addresses and ports fields
 	if conf_json.Addresses == nil || conf_json.Ports == nil {
-		return fmt.Errorf("Some troubles with parsing 'addresses' or 'ports' fields.")
+		return s.ErrorLog("Some troubles with parsing 'capture' field.")
 	}
 
 	for key, value := range conf_json.Addresses {
@@ -131,7 +159,7 @@ func (s *Suricata) Configure(config_path string) error {
 			if err != nil {
 				return err
 			}
-			key_const.SetElement(avl_const_el)
+			key_const.GetElement().(*constant.Constant).SetElement(avl_const_el.(*constant.Constant).GetElement())
 			if err = s.validator.AddValid(key_const); err != nil {
 				return err
 			}
@@ -153,7 +181,7 @@ func (s *Suricata) Configure(config_path string) error {
 		}
 		// if constant is group
 		if constants.IsGroup(value) {
-			grp, err := suricata_parser.ParseGroup(value, constants.AddressType)
+			grp, err := suricata_parser.ParseGroup(value, constants.AddressType, s.validator.GetBaseValidator())
 			if err != nil {
 				return err
 			}
@@ -204,7 +232,7 @@ func (s *Suricata) Configure(config_path string) error {
 		}
 		// if constant is range
 		if constants.IsPortRange(value) {
-			p_range, err := suricata_parser.ParseGroup(value, constants.PortType)
+			p_range, err := suricata_parser.ParseElements(value, constants.PortType, s.validator.GetBaseValidator())
 			if err != nil {
 				return err
 			}
@@ -218,7 +246,7 @@ func (s *Suricata) Configure(config_path string) error {
 		}
 		// if constant is group
 		if constants.IsGroup(value) {
-			group, err := suricata_parser.ParseGroup(value, constants.SrcPortType)
+			group, err := suricata_parser.ParseGroup(value, constants.SrcPortType, s.validator.GetBaseValidator())
 			if err != nil {
 				return err
 			}
@@ -235,20 +263,30 @@ func (s *Suricata) Configure(config_path string) error {
 	return nil
 }
 
+func (s *Suricata) GetCaptureInfo() *system.CaptureInfo {
+	return s.capture_info
+}
+
 func (s *Suricata) Run() error {
 	return nil
 }
 
 func (s *Suricata) DebugLog(msg string) error {
-	s.logs.debug.Println(msg)
+	if s.log_level == LOG_DEBUG_LVL {
+		s.logs.debug.Println(msg)
+	}
 	return nil
 }
 func (s *Suricata) InfoLog(msg string) error {
-	s.logs.info.Println(msg)
+	if s.log_level == LOG_DEBUG_LVL || s.log_level == LOG_INFO_LVL {
+		s.logs.info.Println(msg)
+	}
 	return nil
 }
 func (s *Suricata) ErrorLog(msg string) error {
-	s.logs.err.Println(msg)
+	if s.log_level == LOG_DEBUG_LVL || s.log_level == LOG_INFO_LVL || s.log_level == LOG_ERROR_LVL {
+		s.logs.err.Println(msg)
+	}
 	return nil
 }
 

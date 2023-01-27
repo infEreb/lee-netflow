@@ -1,7 +1,10 @@
 package action
 
 import (
+	"fmt"
 	"lee-netflow/internal/domain/rule/element"
+
+	"github.com/google/gopacket"
 )
 
 var (
@@ -60,6 +63,9 @@ func GetActionType() *ActionType {
 	} 
 }
 
+func (a *Action) SetSrcType() {}
+func (a *Action) SetDstType() {}
+
 func (a *Action) GetValue() string {
 	return a.value
 }
@@ -82,4 +88,17 @@ func (a *Action) Compare(b_a element.Element) bool {
 		return false
 	}
 	return a.value == s_a.value 
+}
+
+func (a *Action) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
+	return nil, true
+}
+
+func (a *Action) Clone() element.Element {
+	el := *a
+	return &el
+}
+
+func (a *Action) String() string {
+	return fmt.Sprintf("{\"%s\": \"%s\"}", a.GetType().GetName(), a.GetValue())
 }

@@ -3,9 +3,8 @@ package option
 import (
 	"fmt"
 	"lee-netflow/internal/domain/rule/element"
-	"strings"
 
-	"golang.org/x/exp/slices"
+	"github.com/google/gopacket"
 )
 
 var (
@@ -56,83 +55,8 @@ func GetOptionType() *OptionType {
 	}
 }
 
-func (o *Option) IsValid() bool {
-	// key:value (msg:"some")
-	if strings.Contains(o.value, ":") {
-		opt := strings.Split(o.value, ":")
-		if len(opt) != 2 {
-			return false
-		}
-		key, _:= opt[0], opt[1]
-		return slices.Contains(validOptions, key)
-	}
-	// key (msg)
-	return slices.Contains(validOptions, o.value)
-	
-}
-func AddValid(value string, _ []string) error {
-	if slices.Contains(validOptions, value) {
-		return fmt.Errorf("Option %s already is valid", value)
-	}
-	validOptions = append(validOptions, value)
-	return nil
-}
-func DelValid(value string) error {
-	if !slices.Contains(validOptions, value) {
-		return fmt.Errorf("Option %s isnt exists as an valid option", value)
-	}
-
-	del_idx := 0
-	for i, v_opt := range validOptions {
-		if v_opt == value {
-			del_idx = i
-			break
-		}
-	}
-
-	last_dir := validOptions[len(validOptions) - 1]
-	validOptions[del_idx] = last_dir
-	validOptions = validOptions[:len(validOptions) - 1]
-
-	return nil
-}
-func (o *Option) IsAvailable() bool {
-	if strings.Contains(o.value, ":") {
-		opt := strings.Split(o.value, ":")
-		if len(opt) != 2 {
-			return false
-		}
-		key, _:= opt[0], opt[1]
-		return slices.Contains(availableOptions, key)
-	}
-	return slices.Contains(availableOptions, o.value)
-}
-func AddAvailable(value string) error {
-	if slices.Contains(availableOptions, value) {
-		return fmt.Errorf("Option %s already available", value)
-	}
-	availableOptions = append(availableOptions, value)
-	return nil
-}
-func DelAvailable(value string) error {
-	if !slices.Contains(availableOptions, value) {
-		return fmt.Errorf("Option %s isnt exists as an available option", value)
-	}
-
-	del_idx := 0
-	for i, a_opt := range availableOptions {
-		if a_opt == value {
-			del_idx = i
-			break
-		}
-	}
-
-	last_dir := availableOptions[len(availableOptions) - 1]
-	availableOptions[del_idx] = last_dir
-	availableOptions = availableOptions[:len(availableOptions) - 1]
-
-	return nil
-}
+func (o *Option) SetSrcType() {}
+func (o *Option) SetDstType() {}
 
 func (o *Option) GetValue() string {
 	return o.value
@@ -155,4 +79,16 @@ func (o *Option) Compare(b_o element.Element) bool {
 	return o.value == s_o.value 
 }
 
+func (o *Option) Clone() element.Element {
+	el := *o
+	return &el
+}
+
+func (o *Option) Match(pk gopacket.Packet) (gopacket.Layer, bool) {
+	return nil, true
+}
+
+func (o *Option) String() string {
+	return fmt.Sprintf("{\"%s\": \"%s\"}", o.GetType().GetName(), o.GetValue())
+}
 

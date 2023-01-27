@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"lee-netflow/internal/adapters/suricata/rule/constants"
 	"lee-netflow/internal/adapters/suricata/rule/element/action"
-	"lee-netflow/internal/adapters/suricata/rule/element/address"
-	"lee-netflow/internal/adapters/suricata/rule/element/constant"
 	"lee-netflow/internal/adapters/suricata/rule/element/direction"
-	"lee-netflow/internal/adapters/suricata/rule/element/port"
+	"lee-netflow/internal/adapters/suricata/rule/element/keyword"
 	"lee-netflow/internal/adapters/suricata/rule/element/protocol"
 	"lee-netflow/internal/domain/rule/element"
 	"lee-netflow/internal/domain/rule/validator"
@@ -30,14 +28,19 @@ func New() (val *SuricataValidator) {
 		constants.ProtocolType.GetName(): {
 			protocol.New("ip"),
 			protocol.New("tcp"),
-			protocol.New("http"),
+			protocol.New("udp"),
 		},
-		constants.ConstantType.GetName(): {
-			constant.New("any", protocol.New("any")),
-			constant.New("any", address.New("any", constants.SrcAddressType)),
-			constant.New("any", address.New("any", constants.DstAddressType)),
-			constant.New("any", port.New("any", constants.SrcPortType)),
-			constant.New("any", port.New("any", constants.DstPortType)),
+		// constants.ConstantType.GetName(): {
+		// 	constant.New("any", protocol.New("any")),
+		// 	constant.New("any", address.New("0.0.0.0/0", constants.AddressType)),
+		// 	constant.New("any", portrange.New("0:", [][2]element.Element{{
+		// 			port.New(fmt.Sprint(constants.MIN_PORT), constants.PortType),
+		// 			port.New(fmt.Sprint(constants.MAX_PORT), constants.PortType),
+		// 		},
+		// 	}, []element.Element{})),
+		// },
+		constants.KeywordType.GetName(): {
+			keyword.New("any"),
 		},
 		constants.DirectionType.GetName(): {
 			direction.New("->"),
@@ -71,4 +74,8 @@ func (sv *SuricataValidator) Validate(elements map[string][]element.Element) err
 
 	} 
 	return nil
+}
+
+func (sv *SuricataValidator) GetBaseValidator() *validator.BaseValidator {
+	return &sv.BaseValidator
 }
