@@ -2,4 +2,4 @@
 # Author ...
 
 # Rule explanation
-alert tcp $PRIVATE_NET $HIGH_PORTS -> $EXTERNAL_NET $HIGH_PORTS (;)
+alert ip $PRIVATE_NET any -> 8.8.8.8 any (;)
